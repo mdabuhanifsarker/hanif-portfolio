@@ -1560,7 +1560,11 @@ export default function App() {
             const req = settingsTx.objectStore('settings').get('aboutImage');
             req.onsuccess = () => resolve(req.result);
           });
-          if (savedAbout) setAboutImage(savedAbout);
+          if (savedAbout && !savedAbout.includes('unsplash.com')) {
+            setAboutImage(savedAbout);
+          } else {
+            setAboutImage(defaultProfileImg);
+          }
 
           const savedLogo = await new Promise<string | null>((resolve) => {
             const req = settingsTx.objectStore('settings').get('logoUrl');
