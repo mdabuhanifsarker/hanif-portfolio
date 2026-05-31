@@ -42,6 +42,9 @@ import {
   FaTelegramPlane 
 } from 'react-icons/fa';
 
+// @ts-ignore
+import defaultProfileImg from './assets/images/regenerated_image_1778759360079.png';
+
 // --- Types ---
 type Page = 'home' | 'projects' | 'reviews' | 'about' | 'contact';
 
@@ -1471,7 +1474,7 @@ export default function App() {
 
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [aboutImage, setAboutImage] = useState('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=1200');
+  const [aboutImage, setAboutImage] = useState(defaultProfileImg);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [bestWorks, setBestWorks] = useState<string[]>([]);
   const [activeVideo, setActiveVideo] = useState<string | Blob | null>(null);
