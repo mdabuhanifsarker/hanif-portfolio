@@ -43,7 +43,7 @@ import {
 } from 'react-icons/fa';
 
 // @ts-ignore
-import defaultProfileImg from './assets/images/regenerated_image_1778759360079.png';
+import defaultProfileImg from './assets/images/hanif.png';
 
 // --- Types ---
 type Page = 'home' | 'projects' | 'reviews' | 'about' | 'contact';
