@@ -44,6 +44,8 @@ import {
 
 // @ts-ignore
 import defaultProfileImg from './assets/images/hanif.png';
+// @ts-ignore
+import defaultLogoImg from './assets/images/logo.png';
 
 // --- Types ---
 type Page = 'home' | 'projects' | 'reviews' | 'about' | 'contact';
@@ -147,59 +149,63 @@ const Sidebar = ({ isOpen, onClose, setPage, currentPage }: { isOpen: boolean, o
   </AnimatePresence>
 );
 
-const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Page, setPage: (p: Page) => void, onOpenMenu: () => void, logoUrl: string | null }) => (
-  <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 md:px-12 py-6 md:py-8 bg-[#0B132B] backdrop-blur-xl border-b border-white/5">
-    <motion.div 
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="flex items-center gap-3 text-[#63e5f1] font-black text-xl md:text-2xl tracking-tight cursor-pointer hover:brightness-110 transition-all"
-      onClick={() => setPage('home')}
-    >
-      {logoUrl && (
-        <img 
-          src={logoUrl} 
-          alt="Logo" 
-          className="w-10 h-10 md:w-12 md:h-12 object-contain rounded-full border border-white/10" 
-        />
-      )}
-      ABU HANIF
-    </motion.div>
-    
-    <div className="hidden md:flex gap-10">
-      {(['home', 'projects', 'contact', 'reviews', 'about'] as Page[]).map((item) => (
-        <button
-          key={item}
-          onClick={() => setPage(item)}
-          className={`nav-btn font-medium uppercase text-xs tracking-widest transition-colors ${
-            currentPage === item ? 'text-[#63e5f1]' : 'text-slate-400 hover:text-[#63e5f1]'
-          }`}
-        >
-          {item === 'reviews' ? 'Reviews' : (item === 'projects' ? 'Portfolio' : item.charAt(0).toUpperCase() + item.slice(1))}
-        </button>
-      ))}
-    </div>
-
-    <div className="flex items-center gap-4">
-      <motion.button 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setPage('contact')}
-        className="hidden md:block bg-[#E1EE7E] text-[#0B132B] px-8 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-[#E1EE7E]/20"
+const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Page, setPage: (p: Page) => void, onOpenMenu: () => void, logoUrl: string | null }) => {
+  const displayLogo = logoUrl || defaultLogoImg;
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 md:px-12 py-6 md:py-8 bg-[#0B132B] backdrop-blur-xl border-b border-white/5">
+      <motion.div 
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="flex items-center gap-3 text-[#63e5f1] font-black text-xl md:text-2xl tracking-tight cursor-pointer hover:brightness-110 transition-all"
+        onClick={() => setPage('home')}
       >
-        Hire Me
-      </motion.button>
+        {displayLogo && (
+          <img 
+            src={displayLogo} 
+            alt="Logo" 
+            referrerPolicy="no-referrer"
+            className="w-10 h-10 md:w-12 md:h-12 object-contain rounded-full border border-white/10 animate-pulse bg-slate-900" 
+          />
+        )}
+        ABU HANIF
+      </motion.div>
       
-      <button 
-        onClick={onOpenMenu}
-        className="p-3 bg-white/5 rounded-2xl text-white hover:bg-white/10 transition-all border border-white/10"
-      >
-        <Menu size={24} />
-      </button>
-    </div>
-  </nav>
-);
+      <div className="hidden md:flex gap-10">
+        {(['home', 'projects', 'contact', 'reviews', 'about'] as Page[]).map((item) => (
+          <button
+            key={item}
+            onClick={() => setPage(item)}
+            className={`nav-btn font-medium uppercase text-xs tracking-widest transition-colors ${
+              currentPage === item ? 'text-[#63e5f1]' : 'text-slate-400 hover:text-[#63e5f1]'
+            }`}
+          >
+            {item === 'reviews' ? 'Reviews' : (item === 'projects' ? 'Portfolio' : item.charAt(0).toUpperCase() + item.slice(1))}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-4">
+        <motion.button 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setPage('contact')}
+          className="hidden md:block bg-[#E1EE7E] text-[#0B132B] px-8 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-[#E1EE7E]/20"
+        >
+          Hire Me
+        </motion.button>
+        
+        <button 
+          onClick={onOpenMenu}
+          className="p-3 bg-white/5 rounded-2xl text-white hover:bg-white/10 transition-all border border-white/10"
+        >
+          <Menu size={24} />
+        </button>
+      </div>
+    </nav>
+  );
+};
 
 const MobileNav = ({ current, setPage }: { current: Page, setPage: (p: Page) => void }) => (
   <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50 glass-card px-8 py-4 flex gap-8 shadow-2xl border-white/10 bg-[#131313]/80 backdrop-blur-2xl">
@@ -452,15 +458,20 @@ const ContactSection = ({
             </div>
 
             {/* Location */}
-            <div className="flex items-center gap-5">
-              <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center text-purple-400 border border-purple-500/20 shrink-0">
+            <a 
+              href="https://maps.app.goo.gl/8md9qCKRhSMkmigKA" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-5 group/location cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center text-purple-400 border border-purple-500/20 shrink-0 group-hover/location:bg-purple-500/20 group-hover/location:border-purple-500/40 transition-all">
                 <MapPin size={20} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Location</p>
-                <p className="text-white font-black text-sm sm:text-lg truncate">Gazipur, Dhaka, Bangladesh</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover/location:text-purple-400 transition-colors">Location</p>
+                <p className="text-white font-black text-sm sm:text-lg truncate group-hover/location:text-purple-300 transition-colors">Gazipur, Dhaka, Bangladesh</p>
               </div>
-            </div>
+            </a>
           </div>
 
           <div className="space-y-4">
@@ -937,23 +948,9 @@ const Portfolio = ({
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => setViewMode('create')}
-                      className={`text-2xl font-black uppercase tracking-tight transition-colors ${viewMode === 'create' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                      className="text-2xl font-black uppercase tracking-tight text-white"
                     >
                       {editingProject ? 'Edit' : 'Upload'}
-                    </button>
-                    <span className="text-slate-700 font-black">/</span>
-                    <button 
-                      onClick={() => setViewMode('list')}
-                      className={`text-2xl font-black uppercase tracking-tight transition-colors ${viewMode === 'list' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                      Manage
-                    </button>
-                    <span className="text-slate-700 font-black">/</span>
-                    <button 
-                      onClick={() => setViewMode('settings')}
-                      className={`text-2xl font-black uppercase tracking-tight transition-colors ${viewMode === 'settings' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                      Settings
                     </button>
                   </div>
                 </div>
@@ -1260,19 +1257,22 @@ const Portfolio = ({
                   </div>
 
                   <div className="flex flex-col items-center gap-6 p-8 bg-white/[0.02] border-2 border-dashed border-white/10 rounded-[2rem]">
-                    {logoUrl ? (
+                    {logoUrl || defaultLogoImg ? (
                       <div className="relative group">
                         <img 
-                          src={logoUrl} 
+                          src={logoUrl || defaultLogoImg} 
                           alt="Logo Preview" 
+                          referrerPolicy="no-referrer"
                           className="w-24 h-24 md:w-32 md:h-32 object-contain rounded-full bg-black border border-white/10" 
                         />
-                        <button 
-                          onClick={() => setLogoUrl(null)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {logoUrl && (
+                          <button 
+                            onClick={() => setLogoUrl(null)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div className="w-24 h-24 md:w-32 md:h-32 bg-white/5 rounded-full flex items-center justify-center text-slate-600 border border-white/5">
@@ -1453,7 +1453,37 @@ const AIAdvisor = () => {
 // --- Main Engine ---
 
 export default function App() {
-  const [currentPage, setPage] = useState<Page>('home');
+  const [currentPage, setPageInternal] = useState<Page>(() => {
+    const hash = window.location.hash.replace('#', '') as Page;
+    const validPages: Page[] = ['home', 'projects', 'reviews', 'about', 'contact'];
+    return validPages.includes(hash) ? hash : 'home';
+  });
+
+  const setPage = (newPage: Page) => {
+    setPageInternal(newPage);
+    const validPages: Page[] = ['home', 'projects', 'reviews', 'about', 'contact'];
+    if (validPages.includes(newPage)) {
+      if (newPage === 'home') {
+        window.history.pushState(null, '', window.location.pathname + window.location.search);
+      } else {
+        window.location.hash = newPage;
+      }
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' as any });
+  };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '') as Page;
+      const validPages: Page[] = ['home', 'projects', 'reviews', 'about', 'contact'];
+      const pageToSet = validPages.includes(hash) ? hash : 'home';
+      setPageInternal(pageToSet);
+      window.scrollTo({ top: 0, behavior: 'instant' as any });
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -2018,8 +2048,8 @@ export default function App() {
           {currentPage === 'contact' && (
             <div className="py-12 md:py-20 animate-fade-in">
                <div className="max-w-7xl mx-auto px-6 md:px-12 text-center mb-4">
-                 <h2 className="text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-widest leading-none uppercase mb-2">
-                   CONTACT <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-[#00dbe7] font-semibold">ME.</span>
+                 <h2 className="text-4xl sm:text-6xl md:text-7xl font-black text-[#63e5f1] tracking-widest leading-none uppercase mb-2">
+                   CONTACT <span className="text-[#63e5f1] font-semibold">ME.</span>
                  </h2>
                </div>
                <ContactSection handleEmailSubmit={handleEmailSubmit} isSending={isEmailSending} />
