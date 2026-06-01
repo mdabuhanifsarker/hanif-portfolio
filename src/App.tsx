@@ -1621,35 +1621,43 @@ export default function App() {
                 const keys = Object.keys(v);
                 let titleKey = keys.find(k => ['title', 'name', 'video_title', 'youtube_title'].includes(k.toLowerCase())) || 'title';
                 let linkKey = keys.find(k => ['link', 'url', 'youtube_url', 'youtube_link', 'video_url', 'video_link', 'href'].includes(k.toLowerCase())) || 'link';
+                let catKey = keys.find(k => ['category', 'cat', 'genre', 'video_category', 'tag'].includes(k.toLowerCase())) || 'category';
 
                 const title = v[titleKey] || 'Untitled YouTube video';
                 const link = v[linkKey] || '';
+                
+                // Parse and normalize the category (e.g. "Podcast" -> "PODCAST")
+                let rawCategory = v[catKey] || 'PODCAST';
+                let dbCategory = rawCategory.toString().trim().toUpperCase();
+
                 const ytid = getYouTubeId(link);
+                // Use maxresdefault for a high-definition stunning thumbnail option
                 const thumb = ytid 
-                  ? `https://img.youtube.com/vi/${ytid}/mqdefault.jpg`
+                  ? `https://img.youtube.com/vi/${ytid}/maxresdefault.jpg`
                   : "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=800";
 
                 return {
                   id: `sb-${v.id || idx}`,
                   title: title,
-                  category: "SUPABASE FEED",
+                  category: dbCategory,
                   img: thumb,
                   videoUrl: link,
-                  type: 'video'
+                  type: 'video' as const
                 };
               });
 
-              // Add SUPABASE FEED as a navigation category tab
+              // Add unique categories from Supabase to the categories panel dynamically
+              const sbCategories = [...new Set(mappedSbProjects.map(p => p.category))];
               setCategories(prev => {
-                if (!prev.includes("SUPABASE FEED")) {
-                  return [...prev, "SUPABASE FEED"];
-                }
-                return prev;
+                const filteredPrev = prev.filter(cat => cat !== "SUPABASE FEED");
+                const combined = [...filteredPrev, ...sbCategories];
+                return [...new Set(combined)];
               });
 
               setProjects(prev => {
-                const nonSb = prev.filter(p => !p.id.toString().startsWith('sb-'));
-                return [...nonSb, ...mappedSbProjects];
+                // Filter out default offline mockups and former Supabase entries, keeping existing user custom structural folders if any
+                const filtered = prev.filter(p => !p.id.toString().startsWith('sb-') && p.type !== 'video');
+                return [...filtered, ...mappedSbProjects];
               });
             }
           } catch (supaErr) {
