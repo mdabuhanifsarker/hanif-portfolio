@@ -28,6 +28,7 @@ import {
   AlertCircle,
   MapPin,
   Send,
+  RotateCcw,
 } from 'lucide-react';
 
 import { 
@@ -1590,7 +1591,7 @@ export default function App() {
             const req = settingsTx.objectStore('settings').get('aboutImage');
             req.onsuccess = () => resolve(req.result);
           });
-          if (savedAbout && !savedAbout.includes('unsplash.com')) {
+          if (savedAbout && savedAbout.startsWith('data:image/')) {
             setAboutImage(savedAbout);
           } else {
             setAboutImage(defaultProfileImg);
@@ -2006,12 +2007,18 @@ export default function App() {
                  <div className="absolute inset-0 bg-[#aaabad]/20 mix-blend-overlay z-[5]" />
                  
                  {isAdmin && (
-                   <label 
-                     htmlFor="about-upload" 
-                     className="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer z-20"
+                   <div 
+                     className="absolute inset-0 bg-black/80 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-6 z-20"
                    >
-                     <Upload size={40} className="text-primary mb-2" />
-                     <span className="text-[10px] font-black text-white uppercase tracking-widest">Change Photo</span>
+                     <label 
+                       htmlFor="about-upload" 
+                       className="flex flex-col items-center justify-center cursor-pointer text-white hover:text-[#63e5f1] transition-all group/btn"
+                     >
+                       <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-2 group-hover/btn:scale-110 group-hover/btn:bg-white/20 transition-all text-primary">
+                         <Upload size={20} />
+                       </div>
+                       <span className="text-[10px] font-black uppercase tracking-widest">Change Photo</span>
+                     </label>
                      <input 
                        type="file" 
                        id="about-upload" 
@@ -2024,12 +2031,28 @@ export default function App() {
                            reader.onloadend = () => {
                              const base64String = reader.result as string;
                              setAboutImage(base64String);
+                             addNotification("Photo Changed", "Your profile photo has been updated successfully.");
                            };
                            reader.readAsDataURL(file);
                          }
                        }}
                      />
-                   </label>
+                     
+                     <button
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         e.preventDefault();
+                         setAboutImage(defaultProfileImg);
+                         addNotification("Photo Reset", "Profile photo restored to your default actual photo.");
+                       }}
+                       className="flex flex-col items-center justify-center cursor-pointer text-red-400 hover:text-red-300 transition-all group/btn"
+                     >
+                       <div className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center mb-1.5 group-hover/btn:scale-110 group-hover/btn:bg-red-500/20 transition-all">
+                         <RotateCcw size={16} />
+                       </div>
+                       <span className="text-[9px] font-black uppercase tracking-widest">Reset Default</span>
+                     </button>
+                   </div>
                  )}
                </div>
                <div className="space-y-6 md:space-y-8">

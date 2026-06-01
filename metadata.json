@@ -1,6 +1,6 @@
 {
-  "name": "Abu Hanif - Video Editor Portfolio",
-  "description": "High-end cinematic post-production portfolio featuring motion design, color grading, and AI-powered workflow consulting.",
+  "name": "Supabase Video Directory",
+  "description": "A clean HTML-only video directory connected directly to Supabase fetching and displaying YouTube video titles and links.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

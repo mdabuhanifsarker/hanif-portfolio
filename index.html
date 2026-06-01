@@ -3,11 +3,431 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Abu Hanif Portfolio</title>
+    <title>Supabase Video Directory</title>
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+  <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans transition-colors duration-200">
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-200">
+              <i data-lucide="video" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <span class="font-extrabold text-lg tracking-tight text-slate-900">VideoDirectory</span>
+              <span class="text-[10px] font-bold text-indigo-600 block leading-3 uppercase tracking-wider">Supabase Live Feed</span>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-3">
+            <!-- Connection Status Badge -->
+            <div id="connection-status" class="flex items-center gap-2 px-3.5 py-1.5 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full text-xs font-semibold">
+              <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+              <span>Checking Supabase Connection...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Header Section -->
+    <header class="bg-white border-b border-slate-100 py-10">
+      <div class="max-w-4xl mx-auto px-4 text-center">
+        <h1 class="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-3">
+          My YouTube Collections
+        </h1>
+        <p class="text-slate-500 text-lg max-w-xl mx-auto">
+          Synchronized dynamically from our private Supabase relational cloud database storage.
+        </p>
+      </div>
+    </header>
+
+    <!-- Main Content App Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col gap-8">
+      
+      <!-- Interactive Search and Utility Bar -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-4 justify-between items-center shadow-sm">
+        <div class="relative w-full sm:max-w-md">
+          <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+            <i data-lucide="search" class="w-5 h-5"></i>
+          </div>
+          <input 
+            type="text" 
+            id="search-input" 
+            placeholder="Search videos by title..." 
+            class="w-full bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+            disabled
+          />
+        </div>
+        
+        <div class="flex items-center gap-3 self-stretch sm:self-auto justify-between sm:justify-start">
+          <div class="text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+            Total count: <span id="videos-count" class="font-bold text-slate-900">-</span>
+          </div>
+          <button 
+            id="reload-btn"
+            onclick="fetchVideos()"
+            class="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition-all border border-indigo-100 hover:border-indigo-200 active:scale-95"
+            disabled
+          >
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            Sync Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Notification Banner (Errors/Success) -->
+      <div id="loading-spinner" class="py-20 flex flex-col items-center justify-center gap-4">
+        <div class="w-10 h-10 border-4 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin"></div>
+        <p class="text-sm font-semibold text-slate-500">Querying live data records...</p>
+      </div>
+
+      <!-- Error State & SQL Helper Setup Guide (Hidden by default) -->
+      <div id="error-card" class="hidden bg-white border border-red-200 rounded-2xl overflow-hidden shadow-sm max-w-2xl mx-auto w-full">
+        <div class="bg-red-50 border-b border-red-100 p-5 flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 flex-shrink-0">
+            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900">Database Query Failed</h3>
+            <p id="error-message" class="text-xs text-red-700 font-mono mt-1 opacity-90"></p>
+          </div>
+        </div>
+        <div class="p-6 space-y-6">
+          <p class="text-sm text-slate-600 leading-relaxed">
+            This error usually occurs when the <code class="bg-slate-100 font-mono text-xs px-1.5 py-0.5 rounded text-indigo-600 font-bold">videos</code> table has not been created or populated in your Supabase database instance under the current schema. To build and populate this structure instantly, execute this schema inside your <strong>Supabase SQL Editor</strong>:
+          </p>
+          
+          <div class="relative">
+            <pre class="bg-slate-900 text-slate-300 font-mono text-xs p-4 rounded-xl overflow-x-auto select-all shadow-inner border border-slate-800 leading-relaxed"><code>-- 1. Create a public 'videos' table schema
+CREATE TABLE videos (
+  id bigint primary key generated always as identity,
+  title text not null,
+  link text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 2. Insert dummy seed records
+INSERT INTO videos (title, link) VALUES 
+('Lofi Chill Beats For Coding & Studying 🎧', 'https://www.youtube.com/watch?v=jfKfPfyJRdk'),
+('How to Learn Web Development Fast (2026 Router Guide)', 'https://www.youtube.com/watch?v=I7X8A6N6t6g'),
+('Building Real-time Dashboards with Supabase and Vanilla JS', 'https://www.youtube.com/watch?v=FjI-O9G3wS0');</code></pre>
+            <button 
+              onclick="copySQL()" 
+              class="absolute top-2.5 right-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
+            >
+              Copy Script
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Video Grid -->
+      <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <!-- Javascript items injected here -->
+      </div>
+
+      <!-- No Results Card (Hidden) -->
+      <div id="no-results" class="hidden py-16 text-center max-w-md mx-auto">
+        <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i data-lucide="video-off" class="w-8 h-8"></i>
+        </div>
+        <h3 class="font-bold text-slate-900 text-lg">No matching videos</h3>
+        <p class="text-slate-500 text-sm mt-1">
+          Adjust your keywords, or add more video URLs directly to your Supabase tables.
+        </p>
+      </div>
+
+      <!-- Technical Schema Inspector (Collapsible) -->
+      <div class="mt-8 border border-slate-200 bg-white rounded-2xl overflow-hidden p-5 shadow-sm">
+        <button 
+          onclick="toggleInspector()" 
+          class="w-full flex justify-between items-center font-bold text-slate-800 text-sm focus:outline-none"
+        >
+          <div class="flex items-center gap-2">
+            <i data-lucide="database" class="w-4 h-4 text-slate-500"></i>
+            <span>Inspection Panel (Raw JSON Database Feed)</span>
+          </div>
+          <i data-lucide="chevron-down" id="inspector-chevron" class="w-4 h-4 transition-transform text-slate-400"></i>
+        </button>
+        
+        <div id="inspector-panel" class="hidden mt-4 pt-4 border-t border-slate-100">
+          <p class="text-xs text-slate-500 mb-3 font-medium">
+            Shows the exact live response schema retrieved from Supabase to assist in troubleshooting database field attributes.
+          </p>
+          <pre id="raw-json" class="bg-slate-950 text-slate-300 font-mono text-xs p-4 rounded-xl overflow-x-auto border border-slate-800 max-h-60 shadow-inner">[]</pre>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-20 py-8">
+      <div class="max-w-7xl mx-auto px-4 text-center">
+        <p class="text-xs text-slate-400 font-medium">
+          Built securely on pure HTML5 & Supabase Serverless REST API Engine. No build steps required.
+        </p>
+      </div>
+    </footer>
+
+    <!-- JavaScript Code Logic -->
+    <script>
+      // Supabase API config configuration credentials
+      const SUPABASE_URL = "https://wirshemphpkyyzpexzoa.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_tWJ1SIXe6zQbL2qpAW6xpw_XKYw58Jk";
+      
+      let allVideos = [];
+
+      // Initialize helper functions
+      function getYouTubeId(url) {
+        if (!url) return null;
+        // Support various formatting of shareables, links, watch URLs, embed urls
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+      }
+
+      function toggleInspector() {
+        const panel = document.getElementById('inspector-panel');
+        const chev = document.getElementById('inspector-chevron');
+        panel.classList.toggle('hidden');
+        chev.classList.toggle('rotate-180');
+      }
+
+      function copySQL() {
+        const text = `CREATE TABLE videos (
+  id bigint primary key generated always as identity,
+  title text not null,
+  link text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+INSERT INTO videos (title, link) VALUES 
+('Lofi Chill Beats For Coding & Studying 🎧', 'https://www.youtube.com/watch?v=jfKfPfyJRdk'),
+('How to Learn Web Development Fast (2026 Router Guide)', 'https://www.youtube.com/watch?v=I7X8A6N6t6g'),
+('Building Real-time Dashboards with Supabase and Vanilla JS', 'https://www.youtube.com/watch?v=FjI-O9G3wS0');`;
+        navigator.clipboard.writeText(text).then(() => {
+          alert('Copied schema creation script to clipboard! Paste it inside your Supabase project SQL Editor.');
+        }).catch(err => {
+          console.error('Could not copy text: ', err);
+        });
+      }
+
+      // Initialize Supabase Client
+      let supabaseClient;
+      try {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        updateStatusBadge('checking');
+      } catch (e) {
+        console.error('Initialization error:', e);
+        updateStatusBadge('error', 'Initialization Failed');
+      }
+
+      function updateStatusBadge(status, message = '') {
+        const badge = document.getElementById('connection-status');
+        if (!badge) return;
+
+        if (status === 'checking') {
+          badge.className = "flex items-center gap-2 px-3.5 py-1.5 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full text-xs font-semibold";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span><span>Checking Supabase Connection...</span>`;
+        } else if (status === 'connected') {
+          badge.className = "flex items-center gap-2 px-3.5 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-semibold";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Supabase Online</span>`;
+        } else {
+          badge.className = "flex items-center gap-2 px-3.5 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-full text-xs font-semibold";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Offline: ${message || 'Error'}</span>`;
+        }
+      }
+
+      // Main fetching mechanism
+      async function fetchVideos() {
+        const spinner = document.getElementById('loading-spinner');
+        const grid = document.getElementById('video-grid');
+        const errorCard = document.getElementById('error-card');
+        const searchInput = document.getElementById('search-input');
+        const reloadBtn = document.getElementById('reload-btn');
+        const countBadge = document.getElementById('videos-count');
+        const rawJsonBox = document.getElementById('raw-json');
+
+        spinner.classList.remove('hidden');
+        grid.innerHTML = '';
+        errorCard.classList.add('hidden');
+        
+        try {
+          // Perform actual API query to relational table
+          const { data, error } = await supabaseClient
+            .from('videos')
+            .select('*');
+
+          if (error) throw error;
+
+          // Record findings in Inspector
+          rawJsonBox.innerText = JSON.stringify(data, null, 2);
+
+          if (data && Array.isArray(data)) {
+            allVideos = data;
+            
+            // Allow inputs
+            searchInput.removeAttribute('disabled');
+            reloadBtn.removeAttribute('disabled');
+            countBadge.innerText = allVideos.length;
+            
+            updateStatusBadge('connected');
+            renderVideos(allVideos);
+          } else {
+            throw new Error('Supabase responded with an invalid video collection format');
+          }
+
+        } catch (err) {
+          console.error('Fetch error:', err);
+          updateStatusBadge('error', err.message || 'Table videos not prepared');
+          
+          // Display explicit diagnostic error box
+          document.getElementById('error-message').innerText = `${err.code || 'CODE_ERR'}: ${err.message || 'Table not found'}`;
+          errorCard.classList.remove('hidden');
+          countBadge.innerText = '0';
+          
+          searchInput.setAttribute('disabled', 'true');
+          reloadBtn.removeAttribute('disabled');
+        } finally {
+          spinner.classList.add('hidden');
+          lucide.createIcons();
+        }
+      }
+
+      // Video list painter
+      function renderVideos(itemsToRender) {
+        const grid = document.getElementById('video-grid');
+        const noResults = document.getElementById('no-results');
+        
+        grid.innerHTML = '';
+        
+        if (!itemsToRender || itemsToRender.length === 0) {
+          noResults.classList.remove('hidden');
+          return;
+        }
+        
+        noResults.classList.add('hidden');
+
+        itemsToRender.forEach((video, index) => {
+          // Robust column extraction detection
+          const keys = Object.keys(video);
+          const titleKey = keys.find(k => ['title', 'name', 'video_title', 'youtube_title'].includes(k.toLowerCase())) || keys[0] || 'title';
+          const linkKey = keys.find(k => ['link', 'url', 'youtube_url', 'youtube_link', 'video_url', 'video_link', 'href'].includes(k.toLowerCase())) || keys[1] || 'link';
+          
+          const title = video[titleKey] || 'Untitled Video';
+          const link = video[linkKey] || '#';
+          
+          // Extract Youtube Thumbnail representation
+          const ytid = getYouTubeId(link);
+          const hasThumbnail = ytid !== null;
+          const thumbnailUrl = hasThumbnail 
+            ? `https://img.youtube.com/vi/${ytid}/mqdefault.jpg`
+            : `https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=600&q=80`;
+
+          const videoCard = document.createElement('div');
+          // Responsive hover dynamic cards style
+          videoCard.className = "bg-white border border-slate-200 rounded-3xl overflow-hidden group shadow-sm hover:shadow-xl hover:shadow-slate-200 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between";
+          videoCard.innerHTML = `
+            <div>
+              <!-- Clickable Image Thumbnail Frame -->
+              <a href="${link}" target="_blank" rel="noopener noreferrer" class="block relative aspect-video overflow-hidden bg-slate-900 group-hover:brightness-95 transition-all">
+                <img 
+                  src="${thumbnailUrl}" 
+                  alt="${title}" 
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  referrerpolicy="no-referrer"
+                />
+                <!-- Darkened glass tag -->
+                <div class="absolute top-3 left-3 bg-slate-950/70 backdrop-blur-md text-white font-bold text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 bg-red-600 rounded-full animate-ping"></span>
+                  <span>${hasThumbnail ? 'YouTube' : 'External'}</span>
+                </div>
+                
+                <!-- Hover play state icon overlay -->
+                <div class="absolute inset-0 bg-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div class="w-12 h-12 bg-white/95 rounded-full flex items-center justify-center text-indigo-600 shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                    <i data-lucide="play" class="w-5 h-5 fill-current ml-0.5"></i>
+                  </div>
+                </div>
+              </a>
+
+              <!-- Card Meta Description -->
+              <div class="p-5 sm:p-6 space-y-3">
+                <div class="flex items-center gap-2 text-xs text-indigo-600 font-semibold uppercase tracking-wider">
+                  <i data-lucide="hash" class="w-3.5 h-3.5"></i>
+                  <span>ID #${video.id || index + 1}</span>
+                </div>
+                
+                <h3 class="font-bold text-slate-950 leading-snug text-base line-clamp-2 hover:text-indigo-600 transition-colors">
+                  <a href="${link}" target="_blank" rel="noopener noreferrer">${title}</a>
+                </h3>
+              </div>
+            </div>
+
+            <!-- Footer Link Call to Action -->
+            <div class="p-5 sm:p-6 pt-0 border-t border-slate-50">
+              <a 
+                href="${link}" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                class="w-full flex items-center justify-center gap-2 bg-slate-150 hover:bg-indigo-600 text-slate-800 hover:text-white border border-slate-200 hover:border-indigo-600 rounded-xl py-3 px-4 text-xs font-black uppercase tracking-widest transition-all duration-200"
+              >
+                <span>Watch Video</span>
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+              </a>
+            </div>
+          `;
+          
+          grid.appendChild(videoCard);
+        });
+
+        // Initialize newly injected Lucide icons
+        lucide.createIcons();
+      }
+
+      // Live keyboard filter listener
+      document.getElementById('search-input').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (!query) {
+          renderVideos(allVideos);
+          return;
+        }
+
+        const filtered = allVideos.filter(video => {
+          const title = (video.title || video.name || '').toLowerCase();
+          return title.includes(query);
+        });
+
+        renderVideos(filtered);
+      });
+
+      // Call load events on load
+      window.addEventListener('DOMContentLoaded', () => {
+        fetchVideos();
+      });
+    </script>
   </body>
 </html>
-
