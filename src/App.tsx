@@ -321,8 +321,39 @@ const BestWorksSection = ({
   setPage: (p: Page) => void,
   addNotification: any
 }) => {
-  const bestProjects = projects.filter(p => p.type === 'video' && bestWorks.includes(p.id));
-  const displayProjects = bestProjects.length > 0 ? bestProjects : projects.filter(p => p.type === 'video').slice(0, 4);
+  const videoProjects = projects.filter(p => p.type === 'video');
+  const bestProjects = videoProjects.filter(p => bestWorks.includes(p.id));
+
+  const defaultBestVideos: ProjectItem[] = [
+    {
+      id: 'default-best-1',
+      title: "Podcast Intro & Cinematic Visual Editing",
+      category: "PODCAST",
+      img: "https://img.youtube.com/vi/Fm7fS-E0Vn8/maxresdefault.jpg",
+      videoUrl: "https://www.youtube.com/watch?v=Fm7fS-E0Vn8",
+      type: 'video'
+    },
+    {
+      id: 'default-best-2',
+      title: "Corporate Brand Story & Storytelling reel",
+      category: "CORPORATE VIDEO",
+      img: "https://img.youtube.com/vi/1O0_o-8tO-s/maxresdefault.jpg",
+      videoUrl: "https://www.youtube.com/watch?v=1O0_o-8tO-s",
+      type: 'video'
+    }
+  ];
+
+  let displayProjects: ProjectItem[] = [];
+  if (bestProjects.length > 0) {
+    displayProjects = bestProjects.slice(0, 2);
+  } else if (videoProjects.length > 0) {
+    displayProjects = videoProjects.slice(0, 2);
+  }
+
+  if (displayProjects.length < 2) {
+    const symbolsNeeded = 2 - displayProjects.length;
+    displayProjects = [...displayProjects, ...defaultBestVideos.slice(0, symbolsNeeded)];
+  }
 
   return (
     <section className="pt-16 md:pt-24 pb-12 md:pb-16 px-6 md:px-12 max-w-7xl mx-auto space-y-10">
@@ -1584,22 +1615,21 @@ export default function App() {
             setCategories(prev => [...new Set([...prev, ...projectCats])]);
           } else {
             // Default start data
-            const fallbackVideo = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
             dbProjects = [
               { 
                 id: 'p1-1', 
-                title: "Podcast intro- 01", 
-                category: "PODCAST", 
-                img: "https://images.unsplash.com/photo-1478737270239-2fccd27ee8f0?auto=format&fit=crop&q=80&w=800", 
-                videoUrl: fallbackVideo,
+                title: "Cinematic Travel Film Editing Showcase", 
+                category: "CINEMATIC", 
+                img: "https://img.youtube.com/vi/Fm7fS-E0Vn8/maxresdefault.jpg", 
+                videoUrl: "https://www.youtube.com/watch?v=Fm7fS-E0Vn8",
                 type: 'video' 
               },
               {
                 id: 'p1-corp',
-                title: "Corporate Brand Story",
+                title: "Dynamic Brand Story Masterpiece",
                 category: "CORPORATE VIDEO",
-                img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800", 
-                videoUrl: fallbackVideo,
+                img: "https://img.youtube.com/vi/1O0_o-8tO-s/maxresdefault.jpg", 
+                videoUrl: "https://www.youtube.com/watch?v=1O0_o-8tO-s",
                 type: 'video'
               }
             ];
@@ -1608,18 +1638,22 @@ export default function App() {
 
           // Fetch real-time videos from Supabase
           try {
-            console.log("[Supabase Sync] Starting fetch for 'Videos' or 'videos' table...");
-            
+            console.log("[Supabase Sync] Starting fetch for 'Videos' table...");
+            // Query public.Videos first, falling back to public.videos if needed
             let sbVideos: any[] = [];
             let loadedSuccessfully = false;
-            let finalTableName = 'Videos'; // Try uppercase first as suggested by PostgREST hint
 
-            const attemptFetchForTable = async (tableName: string): Promise<boolean> => {
-              const restUrl = `${SUPABASE_URL}/rest/v1/${tableName}?select=*`;
-              console.log(`[Supabase Sync] Attempting REST GET request for table "${tableName}":`, restUrl);
+            const tableNamesToTry = ['Videos', 'videos'];
+
+            for (const tableName of tableNamesToTry) {
+              if (loadedSuccessfully) break;
               
-              // 1. HTTP REST GET
+              const restUrl = `${SUPABASE_URL}/rest/v1/${tableName}?select=*`;
+              console.log(`[Supabase Sync] Attempting fetch from table '${tableName}'...`);
+
+              // 1. Attempt standard HTTP REST GET as requested
               try {
+                console.log(`[Supabase Sync] Executing REST API GET request for ${tableName}:`, restUrl);
                 const response = await fetch(restUrl, {
                   method: 'GET',
                   headers: {
@@ -1629,52 +1663,47 @@ export default function App() {
                   }
                 });
 
-                console.log(`[Supabase Sync] REST Response for "${tableName}" status: ${response.status}`);
+                console.log(`[Supabase Sync] REST API Response status for ${tableName}: ${response.status} (${response.statusText})`);
 
                 if (response.ok) {
                   const textData = await response.text();
                   if (textData) {
-                    sbVideos = JSON.parse(textData);
-                    console.log(`[Supabase Sync] Successfully loaded ${sbVideos.length} rows from REST table "${tableName}".`);
-                    finalTableName = tableName;
-                    return true;
+                    try {
+                      sbVideos = JSON.parse(textData);
+                      console.log(`[Supabase Sync] Successfully loaded ${sbVideos.length} raw video rows from REST API (${tableName}):`, sbVideos);
+                      loadedSuccessfully = true;
+                      break;
+                    } catch (jsonErr) {
+                      console.error(`[Supabase Sync] JSON parse error on REST response (${tableName}):`, jsonErr);
+                    }
+                  } else {
+                    console.warn(`[Supabase Sync] Received empty body from REST API for ${tableName}.`);
+                    loadedSuccessfully = true;
+                    break;
                   }
                 } else {
-                  console.warn(`[Supabase Sync] REST API HTTP warning for "${tableName}":`, response.status);
+                  console.warn(`[Supabase Sync] REST API HTTP error for ${tableName}:`, response.status, await response.text());
                 }
               } catch (fetchErr) {
-                console.error(`[Supabase Sync] REST API network request failed for "${tableName}":`, fetchErr);
+                console.error(`[Supabase Sync] HTTP REST API network request failed for ${tableName}:`, fetchErr);
               }
 
-              // 2. Client SDK Fallback
-              try {
-                console.log(`[Supabase Sync] Executing SDK client select fallback on table "${tableName}"...`);
+              // 2. Fallback to @supabase/supabase-js library client if REST fetch had issues
+              if (!loadedSuccessfully) {
+                console.log(`[Supabase Sync] Falling back to standard Supabase Client SDK select for '${tableName}'...`);
                 const { data: sdkData, error: sdkErr } = await supabaseClient
                   .from(tableName)
                   .select('*');
-
+                
                 if (sdkErr) {
-                  console.warn(`[Supabase Sync] SDK client select warning for "${tableName}":`, sdkErr);
+                  console.error(`[Supabase Sync] SDK fallback option also errored out for ${tableName}:`, sdkErr);
                 } else if (sdkData) {
                   sbVideos = sdkData;
-                  console.log(`[Supabase Sync] Successfully loaded ${sbVideos.length} rows from SDK client table "${tableName}".`);
-                  finalTableName = tableName;
-                  return true;
+                  console.log(`[Supabase Sync] Successfully loaded ${sbVideos.length} rows via SDK client fallback for ${tableName}:`, sdkData);
+                  loadedSuccessfully = true;
+                  break;
                 }
-              } catch (sdkErr) {
-                console.error(`[Supabase Sync] SDK client select error for "${tableName}":`, sdkErr);
               }
-
-              return false;
-            };
-
-            // Attempt Capitalized 'Videos'
-            loadedSuccessfully = await attemptFetchForTable('Videos');
-
-            // If failed, fallback to lowercase 'videos'
-            if (!loadedSuccessfully) {
-              console.log("[Supabase Sync] Uppercase table failed or was empty. Trying lowercase 'videos'...");
-              loadedSuccessfully = await attemptFetchForTable('videos');
             }
 
             // 3. Process records if retrieval was successful
