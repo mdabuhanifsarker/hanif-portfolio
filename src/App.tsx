@@ -1608,19 +1608,81 @@ export default function App() {
 
           // Fetch real-time videos from Supabase
           try {
-            console.log("Fetching data from 'videos' table in Supabase...");
-            const { data: sbVideos, error: sbErr } = await supabaseClient
-              .from('videos')
-              .select('*');
+            console.log("[Supabase Sync] Starting fetch for 'Videos' or 'videos' table...");
+            
+            let sbVideos: any[] = [];
+            let loadedSuccessfully = false;
+            let finalTableName = 'Videos'; // Try uppercase first as suggested by PostgREST hint
 
-            if (sbErr) {
-              console.error("Supabase query error:", sbErr);
-            } else if (sbVideos && sbVideos.length > 0) {
-              console.log("Loaded videos from Supabase:", sbVideos);
+            const attemptFetchForTable = async (tableName: string): Promise<boolean> => {
+              const restUrl = `${SUPABASE_URL}/rest/v1/${tableName}?select=*`;
+              console.log(`[Supabase Sync] Attempting REST GET request for table "${tableName}":`, restUrl);
+              
+              // 1. HTTP REST GET
+              try {
+                const response = await fetch(restUrl, {
+                  method: 'GET',
+                  headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                  }
+                });
+
+                console.log(`[Supabase Sync] REST Response for "${tableName}" status: ${response.status}`);
+
+                if (response.ok) {
+                  const textData = await response.text();
+                  if (textData) {
+                    sbVideos = JSON.parse(textData);
+                    console.log(`[Supabase Sync] Successfully loaded ${sbVideos.length} rows from REST table "${tableName}".`);
+                    finalTableName = tableName;
+                    return true;
+                  }
+                } else {
+                  console.warn(`[Supabase Sync] REST API HTTP warning for "${tableName}":`, response.status);
+                }
+              } catch (fetchErr) {
+                console.error(`[Supabase Sync] REST API network request failed for "${tableName}":`, fetchErr);
+              }
+
+              // 2. Client SDK Fallback
+              try {
+                console.log(`[Supabase Sync] Executing SDK client select fallback on table "${tableName}"...`);
+                const { data: sdkData, error: sdkErr } = await supabaseClient
+                  .from(tableName)
+                  .select('*');
+
+                if (sdkErr) {
+                  console.warn(`[Supabase Sync] SDK client select warning for "${tableName}":`, sdkErr);
+                } else if (sdkData) {
+                  sbVideos = sdkData;
+                  console.log(`[Supabase Sync] Successfully loaded ${sbVideos.length} rows from SDK client table "${tableName}".`);
+                  finalTableName = tableName;
+                  return true;
+                }
+              } catch (sdkErr) {
+                console.error(`[Supabase Sync] SDK client select error for "${tableName}":`, sdkErr);
+              }
+
+              return false;
+            };
+
+            // Attempt Capitalized 'Videos'
+            loadedSuccessfully = await attemptFetchForTable('Videos');
+
+            // If failed, fallback to lowercase 'videos'
+            if (!loadedSuccessfully) {
+              console.log("[Supabase Sync] Uppercase table failed or was empty. Trying lowercase 'videos'...");
+              loadedSuccessfully = await attemptFetchForTable('videos');
+            }
+
+            // 3. Process records if retrieval was successful
+            if (loadedSuccessfully) {
               const mappedSbProjects: ProjectItem[] = sbVideos.map((v: any, idx: number) => {
                 const keys = Object.keys(v);
                 let titleKey = keys.find(k => ['title', 'name', 'video_title', 'youtube_title'].includes(k.toLowerCase())) || 'title';
-                let linkKey = keys.find(k => ['link', 'url', 'youtube_url', 'youtube_link', 'video_url', 'video_link', 'href'].includes(k.toLowerCase())) || 'link';
+                let linkKey = keys.find(k => ['url', 'link', 'youtube_url', 'youtube_link', 'video_url', 'video_link', 'href'].includes(k.toLowerCase())) || 'link';
                 let catKey = keys.find(k => ['category', 'cat', 'genre', 'video_category', 'tag'].includes(k.toLowerCase())) || 'category';
 
                 const title = v[titleKey] || 'Untitled YouTube video';
@@ -1636,6 +1698,8 @@ export default function App() {
                   ? `https://img.youtube.com/vi/${ytid}/maxresdefault.jpg`
                   : "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=800";
 
+                console.log(`[Supabase Mapping] Row #${idx}: Title="${title}" | Link="${link}" | normalized Category="${dbCategory}"`);
+
                 return {
                   id: `sb-${v.id || idx}`,
                   title: title,
@@ -1648,6 +1712,8 @@ export default function App() {
 
               // Add unique categories from Supabase to the categories panel dynamically
               const sbCategories = [...new Set(mappedSbProjects.map(p => p.category))];
+              console.log("[Supabase Sync] Loaded categories from database mapping:", sbCategories);
+
               setCategories(prev => {
                 const filteredPrev = prev.filter(cat => cat !== "SUPABASE FEED");
                 const combined = [...filteredPrev, ...sbCategories];
@@ -1657,11 +1723,12 @@ export default function App() {
               setProjects(prev => {
                 // Filter out default offline mockups and former Supabase entries, keeping existing user custom structural folders if any
                 const filtered = prev.filter(p => !p.id.toString().startsWith('sb-') && p.type !== 'video');
+                console.log(`[Supabase Sync] Completed update to local projects. Retaining ${filtered.length} items, importing ${mappedSbProjects.length} new items.`);
                 return [...filtered, ...mappedSbProjects];
               });
             }
           } catch (supaErr) {
-            console.error("Failed to connect to Supabase database", supaErr);
+            console.error("[Supabase Sync] Failed to connect or query Supabase database safely", supaErr);
           }
 
           // Load Reviews
