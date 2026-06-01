@@ -1,4 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = "https://wirshemphpkyyzpexzoa.supabase.co";
+const SUPABASE_KEY = "sb_publishable_tWJ1SIXe6zQbL2qpAW6xpw_XKYw58Jk";
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function getYouTubeId(url: string) {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
 import { motion, AnimatePresence, Reorder } from 'motion/react';
 import { getTravelRecommendation } from './services/geminiService';
 import { 
@@ -908,7 +921,21 @@ const Portfolio = ({
                     <p className="text-primary text-[9px] md:text-[10px] font-black tracking-[0.2em]">{project.category}</p>
                     {project.type === 'folder' && <Grid size={12} className="text-primary" />}
                   </div>
-                  <h3 className="text-2xl md:text-3xl font-black text-white">{project.title}</h3>
+                  <h3 className="text-2xl md:text-3xl font-black text-white flex flex-row items-center justify-between w-full gap-4">
+                    <span className="truncate">{project.title}</span>
+                    {project.videoUrl && typeof project.videoUrl === 'string' && (
+                      <span 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(project.videoUrl as string, '_blank');
+                        }}
+                        className="flex-shrink-0 px-3 py-1.5 bg-black/60 hover:bg-[#63e5f1] hover:text-black rounded-xl text-[#63e5f1] transition-all font-sans text-[10px] uppercase tracking-widest flex items-center gap-1.5 pointer-events-auto border border-[#63e5f1]/20 active:scale-95 shadow-md"
+                        title="Watch directly on YouTube"
+                      >
+                        Link <ArrowRight size={10} className="-rotate-45" />
+                      </span>
+                    )}
+                  </h3>
                 </div>
                 
                 {/* Admin Actions Removed from card hover per user request */}
@@ -1549,6 +1576,7 @@ export default function App() {
             req.onerror = () => reject(req.error);
           });
 
+          let dbProjects = savedProjects || [];
           if (savedProjects && savedProjects.length > 0) {
             setProjects(savedProjects);
             // Ensure categories list covers all project categories
@@ -1557,7 +1585,7 @@ export default function App() {
           } else {
             // Default start data
             const fallbackVideo = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-            setProjects([
+            dbProjects = [
               { 
                 id: 'p1-1', 
                 title: "Podcast intro- 01", 
@@ -1574,7 +1602,58 @@ export default function App() {
                 videoUrl: fallbackVideo,
                 type: 'video'
               }
-            ]);
+            ];
+            setProjects(dbProjects);
+          }
+
+          // Fetch real-time videos from Supabase
+          try {
+            console.log("Fetching data from 'videos' table in Supabase...");
+            const { data: sbVideos, error: sbErr } = await supabaseClient
+              .from('videos')
+              .select('*');
+
+            if (sbErr) {
+              console.error("Supabase query error:", sbErr);
+            } else if (sbVideos && sbVideos.length > 0) {
+              console.log("Loaded videos from Supabase:", sbVideos);
+              const mappedSbProjects: ProjectItem[] = sbVideos.map((v: any, idx: number) => {
+                const keys = Object.keys(v);
+                let titleKey = keys.find(k => ['title', 'name', 'video_title', 'youtube_title'].includes(k.toLowerCase())) || 'title';
+                let linkKey = keys.find(k => ['link', 'url', 'youtube_url', 'youtube_link', 'video_url', 'video_link', 'href'].includes(k.toLowerCase())) || 'link';
+
+                const title = v[titleKey] || 'Untitled YouTube video';
+                const link = v[linkKey] || '';
+                const ytid = getYouTubeId(link);
+                const thumb = ytid 
+                  ? `https://img.youtube.com/vi/${ytid}/mqdefault.jpg`
+                  : "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=800";
+
+                return {
+                  id: `sb-${v.id || idx}`,
+                  title: title,
+                  category: "SUPABASE FEED",
+                  img: thumb,
+                  videoUrl: link,
+                  type: 'video'
+                };
+              });
+
+              // Add SUPABASE FEED as a navigation category tab
+              setCategories(prev => {
+                if (!prev.includes("SUPABASE FEED")) {
+                  return [...prev, "SUPABASE FEED"];
+                }
+                return prev;
+              });
+
+              setProjects(prev => {
+                const nonSb = prev.filter(p => !p.id.toString().startsWith('sb-'));
+                return [...nonSb, ...mappedSbProjects];
+              });
+            }
+          } catch (supaErr) {
+            console.error("Failed to connect to Supabase database", supaErr);
           }
 
           // Load Reviews
