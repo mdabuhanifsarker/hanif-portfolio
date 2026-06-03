@@ -83,6 +83,26 @@ interface ProjectItem {
   subItems?: ProjectItem[];
 }
 
+function getYouTubeThumbnail(url: string | Blob | undefined | null) {
+  if (!url || typeof url !== 'string') return null;
+  const id = getYouTubeId(url);
+  if (id) {
+    return `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+  }
+  return null;
+}
+
+function getProjectThumbnail(project: ProjectItem) {
+  if (project) {
+    if (project.videoUrl && typeof project.videoUrl === 'string') {
+      const thumb = getYouTubeThumbnail(project.videoUrl);
+      if (thumb) return thumb;
+    }
+    return project.img || 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=1200';
+  }
+  return 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=1200';
+}
+
 interface Notification {
   id: string;
   title: string;
@@ -199,22 +219,20 @@ const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Pa
       </div>
 
       <div className="flex items-center gap-4">
-        <motion.button
-  initial={{ opacity: 0, scale: 0.9 }}
-  animate={{ opacity: 1, scale: 1 }}
-  whileHover={{ scale: 1.05 }}
-  whileTap={{ scale: 0.95 }}
-  onClick={() => {
-    window.location.href = "mailto:mdabuhanifsarker91@gmail.com";
-  }}
-  className="hidden md:block bg-[#E1EE7E] text-[#0B132B] px-8 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-[#E1EE7E]/20"
->
-  Hire Me
-</motion.button>
+        <motion.button 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setPage('contact')}
+          className="hidden md:block bg-[#E1EE7E] text-[#0B132B] px-8 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-[#E1EE7E]/20"
+        >
+          Hire Me
+        </motion.button>
         
         <button 
           onClick={onOpenMenu}
-          className="p-3 bg-white/5 rounded-2xl text-white hover:bg-white/10 transition-all border border-white/10"
+          className="p-3 bg-white/5 rounded-2xl text-white hover:bg-white/10 active:scale-90 active:bg-white/15 transition-all duration-75 border border-white/10 touch-manipulation cursor-pointer flex items-center justify-center"
         >
           <Menu size={24} />
         </button>
@@ -247,7 +265,7 @@ const MobileNav = ({ current, setPage }: { current: Page, setPage: (p: Page) => 
 
 const Hero = ({ onAboutMe, aboutImage }: { onAboutMe: () => void, aboutImage: string }) => (
   <section className="flex flex-col pt-4 md:pt-6 pb-12 px-6 md:px-12 relative overflow-hidden bg-[#010107]">
-    <div className="absolute top-1/4 -right-20 w-64 md:w-96 h-64 md:h-96 bg-primary/20 blur-[80px] md:blur-[120px] rounded-full" />
+    <div className="absolute top-1/4 -right-20 w-64 md:w-96 h-64 md:h-96 bg-primary/20 blur-[80px] md:blur-[120px] rounded-full pointer-events-none" />
     
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center max-w-7xl mx-auto w-full">
       <motion.div
@@ -268,11 +286,12 @@ const Hero = ({ onAboutMe, aboutImage }: { onAboutMe: () => void, aboutImage: st
         <div className="flex flex-col sm:flex-row gap-4 md:gap-6 pt-4">
           <motion.button 
             whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.92 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 15 }}
             onClick={onAboutMe}
-            className="bg-[#E1EE7E] text-[#0B132B] px-6 py-4 rounded-full font-black text-xs uppercase tracking-widest hover:brightness-110 transition-all flex items-center justify-center gap-3 w-full sm:w-auto"
+            className="bg-[#E1EE7E] text-[#0B132B] px-6 py-4 rounded-full font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all duration-75 flex items-center justify-center gap-3 w-full sm:w-auto touch-manipulation cursor-pointer select-none"
           >
-            about me <ArrowRight size={18} />
+            <span className="pointer-events-none">about me</span> <ArrowRight size={18} className="pointer-events-none select-none" />
           </motion.button>
         </div>
       </motion.div>
@@ -311,16 +330,28 @@ const Hero = ({ onAboutMe, aboutImage }: { onAboutMe: () => void, aboutImage: st
 );
 
 const BestWorksSection = ({ 
+  isAdmin,
   projects, 
+  setProjects, 
+  categories,
+  setCategories,
   bestWorks, 
+  setBestWorks,
   setActiveVideo, 
   setPage,
+  setSelectedCategoryId,
   addNotification
 }: { 
+  isAdmin: boolean,
   projects: ProjectItem[], 
+  setProjects: React.Dispatch<React.SetStateAction<ProjectItem[]>>,
+  categories: string[],
+  setCategories: React.Dispatch<React.SetStateAction<string[]>>,
   bestWorks: string[], 
+  setBestWorks: React.Dispatch<React.SetStateAction<string[]>>,
   setActiveVideo: (url: string | Blob | null) => void, 
   setPage: (p: Page) => void,
+  setSelectedCategoryId: (id: string | null) => void,
   addNotification: any
 }) => {
   const videoProjects = projects.filter(p => p.type === 'video');
@@ -357,18 +388,192 @@ const BestWorksSection = ({
     displayProjects = [...displayProjects, ...defaultBestVideos.slice(0, symbolsNeeded)];
   }
 
+  // Admin and management state
+  const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
+  const [targetSlotIndex, setTargetSlotIndex] = useState<number | null>(null);
+  const [showManager, setShowManager] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const [newProject, setNewProject] = useState<{ 
+    title: string; 
+    category: string; 
+    videoUrl: string | Blob; 
+    videoFile: File | null;
+    img: string;
+  }>({ 
+    title: '', 
+    category: categories[0] || 'PODCAST', 
+    videoUrl: '', 
+    videoFile: null,
+    img: ''
+  });
+
+  const [newCatName, setNewCatName] = useState('');
+  const [showCatAdder, setShowCatAdder] = useState(false);
+
+  // Pre-select category if opening manager
+  useEffect(() => {
+    if (showManager && !newProject.category && categories.length > 0) {
+      setNewProject(prev => ({ ...prev, category: categories[0] }));
+    }
+  }, [showManager, categories]);
+
+  // Auto resolve YouTube thumbnail
+  useEffect(() => {
+    if (newProject.videoUrl && typeof newProject.videoUrl === 'string') {
+      const ytid = getYouTubeId(newProject.videoUrl);
+      if (ytid) {
+        setNewProject(prev => ({
+          ...prev,
+          img: `https://img.youtube.com/vi/${ytid}/maxresdefault.jpg`
+        }));
+      }
+    }
+  }, [newProject.videoUrl]);
+
+  const addCategory = () => {
+    if (newCatName && !categories.includes(newCatName.toUpperCase())) {
+      setCategories(prev => [...prev, newCatName.toUpperCase()]);
+      setNewProject(prev => ({ ...prev, category: newCatName.toUpperCase() }));
+      setNewCatName('');
+      setShowCatAdder(false);
+    }
+  };
+
+  const handleSaveFeatured = async () => {
+    if (!newProject.title) {
+      addNotification("Validation Error", "Please provide a title.");
+      return;
+    }
+    setIsUploading(true);
+    
+    let finalVideoUrl: string | Blob = newProject.videoUrl;
+    let finalImg = newProject.img || 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=1200';
+
+    if (newProject.videoFile) {
+      finalVideoUrl = newProject.videoFile;
+    }
+
+    // De-duplication helper matching exact titles/URLs/Files
+    const isUrlMatch = (pUrl: any) => {
+      if (typeof pUrl === 'string' && typeof finalVideoUrl === 'string') {
+        const cleanP = pUrl.replace(/https?:\/\/(www\.)?/, '').trim().toLowerCase();
+        const cleanF = finalVideoUrl.replace(/https?:\/\/(www\.)?/, '').trim().toLowerCase();
+        return cleanP === cleanF;
+      }
+      if (pUrl instanceof Blob && finalVideoUrl instanceof Blob) {
+        return (pUrl as any).name === (finalVideoUrl as any).name && pUrl.size === finalVideoUrl.size;
+      }
+      return false;
+    };
+
+    const existingProj = projects.find(p => 
+      p.category.toUpperCase() === newProject.category.toUpperCase() &&
+      (p.title.trim().toLowerCase() === newProject.title.trim().toLowerCase() || isUrlMatch(p.videoUrl))
+    );
+
+    let finalProjectId = '';
+
+    if (existingProj) {
+      // Re-use already matched entry from projects state
+      finalProjectId = existingProj.id;
+      setProjects(prev => prev.map(p => {
+        if (p.id === finalProjectId) {
+          return {
+            ...p,
+            title: newProject.title,
+            img: finalImg,
+            videoUrl: finalVideoUrl,
+            type: 'video'
+          };
+        }
+        return p;
+      }));
+    } else {
+      // Check if we are re-syncing from a non-default editing mode click:
+      const isDefaultId = editingProject && editingProject.id.startsWith('default-best-');
+      const editingExistingProj = editingProject && !isDefaultId ? projects.find(p => p.id === editingProject.id) : null;
+
+      if (editingExistingProj) {
+        finalProjectId = editingExistingProj.id;
+        setProjects(prev => prev.map(p => {
+          if (p.id === finalProjectId) {
+            return {
+              ...p,
+              title: newProject.title,
+              category: newProject.category.toUpperCase(),
+              img: finalImg,
+              videoUrl: finalVideoUrl,
+              type: 'video'
+            };
+          }
+          return p;
+        }));
+      } else {
+        // Build an entirely fresh regular project so that it dynamically enters portfolio dedicated category folders
+        finalProjectId = `proj-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        const brandNewProj: ProjectItem = {
+          id: finalProjectId,
+          title: newProject.title,
+          category: newProject.category.toUpperCase(),
+          img: finalImg,
+          videoUrl: finalVideoUrl,
+          type: 'video'
+        };
+
+        setProjects(prev => [brandNewProj, ...prev]);
+
+        // Ensure category array registers it
+        if (!categories.includes(newProject.category.toUpperCase())) {
+          setCategories(prev => [...prev, newProject.category.toUpperCase()]);
+        }
+      }
+    }
+
+    // Pin position index list update for layout rendering items
+    setBestWorks(prev => {
+      const newList = [...prev];
+      while (newList.length < 2) {
+        newList.push('');
+      }
+      if (targetSlotIndex !== null && targetSlotIndex >= 0 && targetSlotIndex < 2) {
+        newList[targetSlotIndex] = finalProjectId;
+      } else {
+        const idx = newList.indexOf(editingProject?.id || '');
+        if (idx !== -1) {
+          newList[idx] = finalProjectId;
+        } else {
+          newList.push(finalProjectId);
+        }
+      }
+      return newList;
+    });
+
+    setIsUploading(false);
+    setShowManager(false);
+    setEditingProject(null);
+    setTargetSlotIndex(null);
+    setNewProject({ title: '', category: categories[0] || 'PODCAST', videoUrl: '', videoFile: null, img: '' });
+    addNotification("Featured Saved & Added", `"${newProject.title}" has been linked to the Best Works and portfolio category.`);
+  };
+
   return (
     <section className="pt-16 md:pt-24 pb-12 md:pb-16 px-6 md:px-12 max-w-7xl mx-auto space-y-10">
-      <div className="flex justify-center text-center w-full">
+      <div className="flex justify-center text-center w-full relative">
         <h2 className="text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-widest leading-none">
           BEST <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-[#00dbe7] font-semibold">WORKS</span>
         </h2>
+        {isAdmin && (
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-primary/10 border border-primary/20 text-primary px-3 py-1.5 rounded-xl text-[10px] uppercase font-black tracking-widest">
+            Admin Mode
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         {displayProjects.map((project, idx) => (
           <motion.div 
-            key={project.id}
+            key={project.id || idx}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -376,6 +581,8 @@ const BestWorksSection = ({
             whileHover={{ scale: 1.02 }}
             onClick={() => {
               if (project.videoUrl) {
+                setPage('projects');
+                setSelectedCategoryId(project.category);
                 setActiveVideo(project.videoUrl);
               } else {
                 addNotification("No Video", "This project doesn't have an associated video yet.");
@@ -383,8 +590,30 @@ const BestWorksSection = ({
             }}
             className="glass-card aspect-video relative group overflow-hidden cursor-pointer rounded-[2rem] border-white/5 hover:border-primary/30 active:scale-95 transition-all duration-500"
           >
+            {isAdmin && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingProject(project);
+                  setNewProject({
+                    title: project.title,
+                    category: project.category || categories[0] || 'PODCAST',
+                    videoUrl: typeof project.videoUrl === 'string' ? project.videoUrl : '',
+                    videoFile: project.videoUrl instanceof Blob ? project.videoUrl as File : null,
+                    img: project.img || ''
+                  });
+                  setTargetSlotIndex(idx);
+                  setShowManager(true);
+                }}
+                className="absolute top-4 right-4 z-20 bg-[#e1ee7e] hover:brightness-110 text-black p-3 rounded-full transition-all flex items-center justify-center shadow-lg shadow-black/50 hover:scale-105 active:scale-90"
+                title="Edit featured video slot"
+              >
+                <Settings size={18} />
+              </button>
+            )}
+
             <img 
-              src={project.img} 
+              src={getProjectThumbnail(project)} 
               className="absolute inset-0 w-full h-full object-cover opacity-65 group-hover:opacity-100 transition-all duration-700" 
               alt={project.title} 
               referrerPolicy="no-referrer"
@@ -394,7 +623,7 @@ const BestWorksSection = ({
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
 
             <div className="absolute bottom-6 left-6 right-6 z-10 flex flex-col gap-2">
-              <span className="text-[9px] font-black text-[#63e5f1] uppercase tracking-[0.3em] bg-[#63e5f1]/10 border border-[#63e5f1]/20 rounded-full px-3 py-1 w-fit">
+              <span className="text-[9px] font-black text-[#63e5f1] uppercase tracking-[0.3em] bg-[#63e5f1]/10 border border-[#63e5f1]/20 rounded-full px-3 py-1 w-fit hover:bg-[#63e5f1]/30 transition-all duration-300 cursor-pointer">
                 {project.category}
               </span>
               <h3 className="text-xl md:text-2xl font-black text-white tracking-tight leading-snug">{project.title}</h3>
@@ -412,16 +641,267 @@ const BestWorksSection = ({
       <div className="flex justify-center pt-2 md:pt-4">
         <motion.button 
           whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.92 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 15 }}
           onClick={() => {
             setPage('projects');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          className="bg-[#E1EE7E] text-[#0B132B] px-12 py-6 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:brightness-110 shadow-2xl shadow-[#E1EE7E]/20 transition-all flex items-center justify-center gap-3 w-full sm:w-auto"
+          className="bg-[#E1EE7E] text-[#0B132B] px-12 py-6 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:brightness-110 shadow-2xl shadow-[#E1EE7E]/20 active:scale-95 transition-all duration-75 flex items-center justify-center gap-3 w-full sm:w-auto touch-manipulation cursor-pointer"
         >
           Visit Portfolio <ArrowRight size={18} />
         </motion.button>
       </div>
+
+      {/* Slide-over/Backdropped BestWorks Project Manager Modal */}
+      <AnimatePresence>
+        {showManager && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center px-6">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              onClick={() => {
+                setShowManager(false);
+                setEditingProject(null);
+                setTargetSlotIndex(null);
+              }}
+              className="absolute inset-0 bg-black/85 backdrop-blur-xl"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="glass-card w-full max-w-xl p-8 sm:p-12 space-y-6 sm:space-y-8 relative z-10 rounded-[3rem] bg-[#0d0d0d] border border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar"
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex gap-4 items-center">
+                  <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-black shadow-lg shadow-primary/20">
+                    <Settings size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-white">
+                      Featured Slot {targetSlotIndex !== null ? targetSlotIndex + 1 : ""}
+                    </h3>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">Customize Featured Showcase Videos</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    setShowManager(false);
+                    setEditingProject(null);
+                    setTargetSlotIndex(null);
+                  }} 
+                  className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-all border border-white/10"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* 1. SELECTION SWAP SELECTOR (Choose from existing projects) */}
+              <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl space-y-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black text-primary uppercase tracking-widest block">Option A: Link to Existing Video</span>
+                  <p className="text-[11px] text-slate-500">Pick any video from your portfolio to display here</p>
+                </div>
+                <div className="relative">
+                  <select 
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-primary text-white appearance-none cursor-pointer text-sm"
+                    value={projects.some(p => p.id === editingProject?.id) ? editingProject?.id : ''}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      if (selectedId) {
+                        const found = projects.find(p => p.id === selectedId);
+                        if (found) {
+                          setEditingProject(found);
+                          setNewProject({
+                            title: found.title,
+                            category: found.category || categories[0] || 'PODCAST',
+                            videoUrl: typeof found.videoUrl === 'string' ? found.videoUrl : '',
+                            videoFile: found.videoUrl instanceof Blob ? null : null,
+                            img: found.img || ''
+                          });
+                        }
+                      }
+                    }}
+                  >
+                    <option value="" className="bg-[#000000] text-slate-500">-- Select Portfolio Project --</option>
+                    {projects.filter(p => p.type === 'video').map(p => (
+                      <option key={p.id} value={p.id} className="bg-[#0c0c0c] text-white">
+                        [{p.category}] {p.title}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                    <ChevronDown size={18} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 text-xs font-bold text-slate-600 justify-center">
+                <span className="h-px bg-white/5 flex-grow" />
+                <span>OR REEDIT / UPLOAD NEW</span>
+                <span className="h-px bg-white/5 flex-grow" />
+              </div>
+
+              {/* 2. INLINE CREATOR/EDITOR BAR */}
+              <div className="space-y-6">
+                {/* Title Input */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Video Title</label>
+                  <input 
+                    className="w-full bg-white/5 border border-white/5 focus:border-primary rounded-2xl p-4 focus:outline-none transition-all text-white text-sm"
+                    placeholder="Enter visual masterpiece title..."
+                    value={newProject.title}
+                    onChange={e => setNewProject({...newProject, title: e.target.value})}
+                  />
+                </div>
+
+                {/* Category Picker */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Category</label>
+                    <button 
+                      onClick={() => setShowCatAdder(!showCatAdder)}
+                      className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline"
+                    >
+                      {showCatAdder ? 'Pick Existing' : '+ New Category'}
+                    </button>
+                  </div>
+                  
+                  {showCatAdder ? (
+                    <div className="flex gap-2">
+                      <input 
+                        className="flex-grow bg-white/5 border border-primary/30 rounded-xl p-3 focus:outline-none text-white text-xs"
+                        placeholder="New category name..."
+                        value={newCatName}
+                        onChange={e => setNewCatName(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addCategory()}
+                      />
+                      <button 
+                         onClick={addCategory}
+                         className="bg-primary text-black px-4 rounded-xl text-[10px] font-black uppercase"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <select 
+                        className="w-full bg-white/5 border border-white/5 focus:border-primary rounded-2xl p-4 focus:outline-none transition-all text-white appearance-none cursor-pointer text-sm"
+                        value={newProject.category}
+                        onChange={e => setNewProject({...newProject, category: e.target.value})}
+                      >
+                        {categories.map(cat => (
+                          <option key={cat} value={cat} className="bg-[#0d0d0d]">{cat}</option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                        <ChevronDown size={18} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* File Upload / Video URL */}
+                <div className="p-5 border border-white/5 bg-white/[0.01] rounded-3xl space-y-4">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Video Source</label>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <label 
+                      htmlFor="featured-video-file" 
+                      className="flex-1 flex flex-col items-center justify-center p-6 bg-white/5 rounded-2xl cursor-pointer hover:bg-white/10 transition-all border border-dashed border-white/10"
+                    >
+                      <Upload size={20} className="text-primary mb-2" />
+                      <span className="text-[9px] font-black text-white uppercase tracking-wider">Choose File</span>
+                      <input 
+                        type="file" 
+                        id="featured-video-file" 
+                        accept="video/*" 
+                        className="hidden" 
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setNewProject({ ...newProject, videoFile: file, videoUrl: '' });
+                          }
+                        }}
+                      />
+                    </label>
+
+                    <div className="flex items-center justify-center text-[10px] text-slate-600 font-bold">OR</div>
+
+                    <div className="flex-[2] space-y-1 flex flex-col justify-center">
+                      <input 
+                        className="w-full bg-white/5 border border-white/5 rounded-xl p-3 focus:outline-none focus:border-primary text-white text-xs"
+                        placeholder="Pasted Video URL (YouTube, Drive, etc...)"
+                        value={typeof newProject.videoUrl === 'string' ? newProject.videoUrl : ''}
+                        onChange={e => setNewProject({...newProject, videoUrl: e.target.value, videoFile: null})}
+                      />
+                    </div>
+                  </div>
+
+                  {newProject.videoFile && (
+                    <p className="text-[9px] font-black text-primary uppercase select-none">
+                      ✓ File Attach: {newProject.videoFile.name}
+                    </p>
+                  )}
+                </div>
+
+                {/* Thumbnail Preview and Upload */}
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Video Thumbnail Image</label>
+                  <div className="flex gap-4">
+                    <label 
+                      htmlFor="featured-thumbnail-file" 
+                      className="flex-1 flex flex-col items-center justify-center p-6 bg-white/5 rounded-2xl cursor-pointer hover:bg-white/10 transition-all border border-dashed border-white/10 text-center"
+                    >
+                      <Image size={20} className="text-[#63e5f1] mb-2" />
+                      <span className="text-[9px] font-black text-white uppercase tracking-wider">Custom Thumbnail</span>
+                      <input 
+                        type="file" 
+                        id="featured-thumbnail-file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setNewProject({ ...newProject, img: reader.result as string });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+
+                    {newProject.img && (
+                      <div className="relative aspect-video w-32 bg-black rounded-xl overflow-hidden border border-white/10 shrink-0">
+                        <img src={newProject.img} className="w-full h-full object-cover opacity-80" alt="Preview" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Submit Action */}
+                <motion.button 
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  disabled={isUploading}
+                  onClick={handleSaveFeatured}
+                  className="w-full bg-primary hover:brightness-110 text-black py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-primary/10 flex items-center justify-center gap-2"
+                >
+                  {isUploading ? "Syncing..." : (
+                    <>
+                      <CheckCircle2 size={16} />
+                      Save & Pin Featured Video
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
@@ -606,10 +1086,11 @@ const ContactSection = ({
 
             <motion.button 
               whileHover={isSending ? {} : { scale: 1.02 }}
-              whileTap={isSending ? {} : { scale: 0.98 }}
+              whileTap={isSending ? {} : { scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 15 }}
               type="submit" 
               disabled={isSending}
-              className={`w-full ${isSending ? 'bg-slate-700 cursor-not-allowed text-slate-400' : 'bg-sky-500 hover:bg-sky-400 text-white'} py-5 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-xl shadow-sky-500/10 flex items-center justify-center gap-3`}
+              className={`w-full ${isSending ? 'bg-slate-700 cursor-not-allowed text-slate-400' : 'bg-sky-500 hover:bg-sky-400 text-white active:scale-95'} py-5 rounded-2xl font-black uppercase text-xs tracking-widest transition-all duration-75 shadow-xl shadow-sky-500/10 flex items-center justify-center gap-3 touch-manipulation cursor-pointer`}
             >
               {isSending ? (
                 <>
@@ -743,6 +1224,11 @@ const Portfolio = ({
 }) => {
   const activeFolder = groupedProjects.find(f => f.id === selectedCategoryId);
 
+  // Scroll to upper side when entering/exiting category
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedCategoryId]);
+
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [showManager, setShowManager] = useState(false);
   const [newProject, setNewProject] = useState<{ 
@@ -765,6 +1251,19 @@ const Portfolio = ({
       setNewProject(prev => ({ ...prev, category: selectedCategoryId }));
     }
   }, [showManager, selectedCategoryId, editingProject]);
+
+  // Auto resolve YouTube thumbnail
+  useEffect(() => {
+    if (newProject.videoUrl && typeof newProject.videoUrl === 'string') {
+      const ytid = getYouTubeId(newProject.videoUrl);
+      if (ytid) {
+        setNewProject(prev => ({
+          ...prev,
+          img: `https://img.youtube.com/vi/${ytid}/maxresdefault.jpg`
+        }));
+      }
+    }
+  }, [newProject.videoUrl]);
 
   const [newCatName, setNewCatName] = useState('');
   const [showCatAdder, setShowCatAdder] = useState(false);
@@ -846,7 +1345,7 @@ const Portfolio = ({
 
   return (
     <section className="py-24 md:py-32 px-6 md:px-12 space-y-12 md:space-y-16 min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-end gap-8">
+      <div className="flex flex-col md:flex-row justify-between md:items-end items-start gap-8">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             {selectedCategoryId && (
@@ -945,7 +1444,7 @@ const Portfolio = ({
                   initial={{ scale: 1.15 }}
                   whileHover={{ scale: 1 }}
                   transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                  src={project.img} 
+                  src={getProjectThumbnail(project)} 
                   className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100" 
                   alt={project.title} 
                 />
@@ -1282,7 +1781,7 @@ const Portfolio = ({
                     {projects.map((proj) => (
                       <div key={proj.id} className="glass-card p-4 rounded-3xl flex items-center gap-4 group hover:border-primary/30 transition-all bg-white/[0.02]">
                         <div className="w-16 h-16 rounded-xl overflow-hidden bg-black flex-shrink-0 border border-white/10">
-                          <img src={proj.img} className="w-full h-full object-cover" alt={proj.title} />
+                          <img src={getProjectThumbnail(proj)} className="w-full h-full object-cover" alt={proj.title} />
                         </div>
                         <div className="flex-grow min-w-0">
                           <p className="text-white font-bold text-sm truncate uppercase tracking-tight">{proj.title}</p>
@@ -1400,7 +1899,7 @@ const Portfolio = ({
                               className={`flex items-center gap-4 p-3 rounded-2xl border transition-all cursor-pointer ${isBest ? 'bg-primary/5 border-primary/30' : 'bg-white/[0.02] border-white/5 hover:border-white/10'}`}
                             >
                               <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-black border border-white/5">
-                                <img src={project.img} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                                <img src={getProjectThumbnail(project)} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-white font-black text-xs truncate uppercase">{project.title}</p>
@@ -1515,10 +2014,28 @@ const AIAdvisor = () => {
 
 export default function App() {
   const [currentPage, setPageInternal] = useState<Page>(() => {
-    const hash = window.location.hash.replace('#', '') as Page;
+    const rawHash = window.location.hash.replace('#', '');
+    const hash = rawHash.split('/')[0] as Page;
     const validPages: Page[] = ['home', 'projects', 'reviews', 'about', 'contact'];
     return validPages.includes(hash) ? hash : 'home';
   });
+
+  const [selectedCategoryId, setSelectedCategoryIdInternal] = useState<string | null>(() => {
+    const rawHash = window.location.hash.replace('#', '');
+    if (rawHash.startsWith('projects/')) {
+      return decodeURIComponent(rawHash.substring('projects/'.length));
+    }
+    return null;
+  });
+
+  const setSelectedCategoryId = (id: string | null) => {
+    setSelectedCategoryIdInternal(id);
+    if (id) {
+      window.location.hash = `projects/${encodeURIComponent(id)}`;
+    } else {
+      window.location.hash = 'projects';
+    }
+  };
 
   const setPage = (newPage: Page) => {
     setPageInternal(newPage);
@@ -1530,15 +2047,26 @@ export default function App() {
         window.location.hash = newPage;
       }
     }
+    if (newPage !== 'projects') {
+      setSelectedCategoryIdInternal(null);
+    }
     window.scrollTo({ top: 0, behavior: 'instant' as any });
   };
 
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '') as Page;
+      const rawHash = window.location.hash.replace('#', '');
+      const hashPage = rawHash.split('/')[0] as Page;
       const validPages: Page[] = ['home', 'projects', 'reviews', 'about', 'contact'];
-      const pageToSet = validPages.includes(hash) ? hash : 'home';
+      const pageToSet = validPages.includes(hashPage) ? hashPage : 'home';
       setPageInternal(pageToSet);
+
+      if (rawHash.startsWith('projects/')) {
+        const cat = decodeURIComponent(rawHash.substring('projects/'.length));
+        setSelectedCategoryIdInternal(cat);
+      } else {
+        setSelectedCategoryIdInternal(null);
+      }
       window.scrollTo({ top: 0, behavior: 'instant' as any });
     };
 
@@ -1547,7 +2075,6 @@ export default function App() {
   }, []);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   
   // Collect all project categories to ensure none are missing from the UI
   const [categories, setCategories] = useState<string[]>(() => {
@@ -1868,14 +2395,17 @@ export default function App() {
   }, [projects, reviews, aboutImage, logoUrl, categories, isLoaded, bestWorks]);
 
   // Group projects by category
-  const groupedProjects = categories.map(cat => ({
-    id: cat,
-    title: cat,
-    category: "FOLDER",
-    type: 'folder' as const,
-    img: projects.find(p => p.category === cat)?.img || "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=1200",
-    subItems: projects.filter(p => p.category === cat)
-  }));
+  const groupedProjects = categories.map(cat => {
+    const firstProj = projects.find(p => p.category === cat);
+    return {
+      id: cat,
+      title: cat,
+      category: "FOLDER",
+      type: 'folder' as const,
+      img: firstProj ? getProjectThumbnail(firstProj) : "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=1200",
+      subItems: projects.filter(p => p.category === cat)
+    };
+  });
 
   const activeFolder = groupedProjects.find(f => f.id === selectedCategoryId);
 
@@ -2010,10 +2540,16 @@ export default function App() {
                 }} 
               />
               <BestWorksSection 
+                isAdmin={isAdmin}
                 projects={projects} 
+                setProjects={setProjects}
+                categories={categories}
+                setCategories={setCategories}
                 bestWorks={bestWorks} 
+                setBestWorks={setBestWorks}
                 setActiveVideo={setActiveVideo} 
                 setPage={setPage}
+                setSelectedCategoryId={setSelectedCategoryId}
                 addNotification={addNotification}
               />
               <ContactSection handleEmailSubmit={handleEmailSubmit} isSending={isEmailSending} />
@@ -2371,18 +2907,15 @@ export default function App() {
                 ))}
               </div>
               
-             <motion.button
-  initial={{ opacity: 0, scale: 0.9 }}
-  animate={{ opacity: 1, scale: 1 }}
-  whileHover={{ scale: 1.05 }}
-  whileTap={{ scale: 0.95 }}
-  onClick={() => {
-    window.location.href = "mailto:mdabuhanifsarker91@gmail.com";
-  }}
-  className="hidden md:block bg-[#E1EE7E] text-[#0B132B] px-8 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-[#E1EE7E]/20"
->
-  Hire Me
-</motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.92 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                onClick={() => setPage('contact')}
+                className="w-full bg-[#E1EE7E] text-[#0B132B] px-10 py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:brightness-110 active:scale-95 transition-all duration-75 shadow-xl shadow-[#E1EE7E]/20 touch-manipulation cursor-pointer"
+              >
+                HIRE ME
+              </motion.button>
             </div>
           </div>
         </div>
