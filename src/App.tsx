@@ -2371,14 +2371,18 @@ export default function App() {
                 ))}
               </div>
               
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setPage('contact')}
-                className="w-full bg-[#E1EE7E] text-[#0B132B] px-10 py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:brightness-110 transition-all shadow-xl shadow-[#E1EE7E]/20"
-              >
-                HIRE ME
-              </motion.button>
+             <motion.button
+  initial={{ opacity: 0, scale: 0.9 }}
+  animate={{ opacity: 1, scale: 1 }}
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+  onClick={() => {
+    window.location.href = "mailto:mdabuhanifsarker91@gmail.com";
+  }}
+  className="hidden md:block bg-[#E1EE7E] text-[#0B132B] px-8 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-[#E1EE7E]/20"
+>
+  Hire Me
+</motion.button>
             </div>
           </div>
         </div>
