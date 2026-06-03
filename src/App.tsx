@@ -199,16 +199,18 @@ const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Pa
       </div>
 
       <div className="flex items-center gap-4">
-        <motion.button 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setPage('contact')}
-          className="hidden md:block bg-[#E1EE7E] text-[#0B132B] px-8 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-[#E1EE7E]/20"
-        >
-          Hire Me
-        </motion.button>
+        <motion.button
+  initial={{ opacity: 0, scale: 0.9 }}
+  animate={{ opacity: 1, scale: 1 }}
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+  onClick={() => {
+    window.location.href = "mailto:mdabuhanifsarker91@gmail.com";
+  }}
+  className="hidden md:block bg-[#E1EE7E] text-[#0B132B] px-8 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-[#E1EE7E]/20"
+>
+  Hire Me
+</motion.button>
         
         <button 
           onClick={onOpenMenu}
