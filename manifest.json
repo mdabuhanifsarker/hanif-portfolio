@@ -1,0 +1,23 @@
+{
+  "name": "Abu Hanif - Video Editor & AI Workflow Specialist",
+  "short_name": "Abu Hanif",
+  "description": "Portfolio of Abu Hanif - Video Editor & AI workflow specialist",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0c10",
+  "theme_color": "#0b0c10",
+  "icons": [
+    {
+      "src": "/src/assets/images/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/src/assets/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

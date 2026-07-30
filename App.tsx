@@ -2509,7 +2509,7 @@ export default function App() {
   const savedScrollY = useRef<number>(0);
   const pushedModalState = useRef<boolean>(false);
 
-  // Helper to dynamically create/update <link rel="icon"> in document <head>
+  // Helper to dynamically create/update all platform favicons (Android, Apple, Windows, Shortcut) in document <head>
   const updateFaviconInHead = (rawUrl: string) => {
     if (!rawUrl || typeof rawUrl !== 'string') return;
     const cleanUrl = rawUrl.trim();
@@ -2519,6 +2519,7 @@ export default function App() {
       ? `${cleanUrl}&v=${Date.now()}`
       : `${cleanUrl}?v=${Date.now()}`;
 
+    // 1. Standard favicons, shortcut icons, and sizes
     const faviconLinks = document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']");
     if (faviconLinks.length > 0) {
       faviconLinks.forEach((link) => {
@@ -2529,6 +2530,31 @@ export default function App() {
       newLink.rel = 'icon';
       newLink.href = cacheBustUrl;
       document.head.appendChild(newLink);
+    }
+
+    // 2. Apple Touch Icon (iOS / Safari)
+    const appleLinks = document.querySelectorAll<HTMLLinkElement>("link[rel*='apple-touch-icon']");
+    if (appleLinks.length > 0) {
+      appleLinks.forEach((link) => {
+        link.href = cacheBustUrl;
+      });
+    } else {
+      const newAppleLink = document.createElement('link');
+      newAppleLink.rel = 'apple-touch-icon';
+      newAppleLink.sizes = '180x180';
+      newAppleLink.href = cacheBustUrl;
+      document.head.appendChild(newAppleLink);
+    }
+
+    // 3. Microsoft / Windows Tile Image
+    const msTile = document.querySelector<HTMLMetaElement>("meta[name='msapplication-TileImage']");
+    if (msTile) {
+      msTile.content = cacheBustUrl;
+    } else {
+      const newMsMeta = document.createElement('meta');
+      newMsMeta.name = 'msapplication-TileImage';
+      newMsMeta.content = cacheBustUrl;
+      document.head.appendChild(newMsMeta);
     }
   };
 
