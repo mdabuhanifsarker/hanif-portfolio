@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://wirshemphpkyyzpexzoa.supabase.co";
@@ -156,7 +156,7 @@ const Sidebar = ({ isOpen, onClose, setPage, currentPage }: { isOpen: boolean, o
                   currentPage === item ? 'text-[#4F8CFF]' : 'text-slate-300 hover:text-[#4F8CFF]'
                 }`}
               >
-                {item === 'reviews' ? 'Reviews' : item.toUpperCase()}
+                {item === 'projects' ? 'PORTFOLIO' : item.toUpperCase()}
               </button>
             ))}
           </div>
@@ -209,7 +209,7 @@ const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Pa
       </motion.div>
       
       <div className="hidden md:flex gap-10">
-        {(['home', 'projects', 'contact', 'reviews', 'about'] as Page[]).map((item) => (
+        {(['home', 'projects', 'reviews', 'contact', 'about'] as Page[]).map((item) => (
           <button
             key={item}
             onClick={() => setPage(item)}
@@ -217,7 +217,7 @@ const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Pa
               currentPage === item ? 'text-[#4F8CFF]' : 'text-[#9CA8B8] hover:text-[#4F8CFF]'
             }`}
           >
-            {item === 'reviews' ? 'Reviews' : (item === 'projects' ? 'Portfolio' : item.charAt(0).toUpperCase() + item.slice(1))}
+            {item === 'projects' ? 'PORTFOLIO' : item.toUpperCase()}
           </button>
         ))}
       </div>
@@ -348,7 +348,7 @@ const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void
         <div className="flex gap-3 pt-4">
           {[
             { Icon: FaYoutube, link: "https://www.youtube.com/@Abu_Hanif_Sarker", color: "#FF0000" },
-            { Icon: FaFacebook, link: "https://www.facebook.com/md.abu.hanif.sarker.676754/", color: "#1877F2" },
+            { Icon: FaFacebook, link: "https://www.facebook.com/profile.php?id=61592538396121", color: "#1877F2" },
             { Icon: FaBehance, link: "https://www.behance.net/mdabuhanifsarker", color: "#0057FF" },
             { Icon: FaLinkedin, link: "https://www.linkedin.com/in/mdabuhanifsarker/", color: "#0077B5" },
             { Icon: Mail, link: "mailto:mdabuhanifsarker91@gmail.com", color: "#0084FF" }
@@ -1249,7 +1249,7 @@ const ContactSection = ({
             <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Follow me</h4>
             <div className="flex flex-wrap gap-2.5 justify-center sm:justify-start">
               {[
-                { Icon: FaFacebook, url: 'https://www.facebook.com/md.abu.hanif.sarker.676754/', color: '#1877F2' },
+                { Icon: FaFacebook, url: 'https://www.facebook.com/profile.php?id=61592538396121', color: '#1877F2' },
                 { Icon: FaYoutube, url: 'https://www.youtube.com/@Abu_Hanif_Sarker', color: '#FF0000' },
                 { Icon: FaInstagram, url: 'https://www.instagram.com/editor_abu.hanif/', color: '#E4405F' },
                 { Icon: FaPinterest, url: 'https://www.pinterest.com/mdabuhanifsarker', color: '#BD081C' },
@@ -2505,6 +2505,95 @@ export default function App() {
   const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [bestWorks, setBestWorks] = useState<string[]>([]);
   const [activeVideo, setActiveVideo] = useState<string | Blob | null>(null);
+
+  const savedScrollY = useRef<number>(0);
+  const pushedModalState = useRef<boolean>(false);
+
+  // Helper to dynamically create/update all platform favicons (Android, Apple, Windows, Shortcut) in document <head>
+  const updateFaviconInHead = (rawUrl: string) => {
+    if (!rawUrl || typeof rawUrl !== 'string') return;
+    const cleanUrl = rawUrl.trim();
+    if (!cleanUrl) return;
+
+    const cacheBustUrl = cleanUrl.includes('?') 
+      ? `${cleanUrl}&v=${Date.now()}`
+      : `${cleanUrl}?v=${Date.now()}`;
+
+    // 1. Standard favicons, shortcut icons, and sizes
+    const faviconLinks = document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']");
+    if (faviconLinks.length > 0) {
+      faviconLinks.forEach((link) => {
+        link.href = cacheBustUrl;
+      });
+    } else {
+      const newLink = document.createElement('link');
+      newLink.rel = 'icon';
+      newLink.href = cacheBustUrl;
+      document.head.appendChild(newLink);
+    }
+
+    // 2. Apple Touch Icon (iOS / Safari)
+    const appleLinks = document.querySelectorAll<HTMLLinkElement>("link[rel*='apple-touch-icon']");
+    if (appleLinks.length > 0) {
+      appleLinks.forEach((link) => {
+        link.href = cacheBustUrl;
+      });
+    } else {
+      const newAppleLink = document.createElement('link');
+      newAppleLink.rel = 'apple-touch-icon';
+      newAppleLink.sizes = '180x180';
+      newAppleLink.href = cacheBustUrl;
+      document.head.appendChild(newAppleLink);
+    }
+
+    // 3. Microsoft / Windows Tile Image
+    const msTile = document.querySelector<HTMLMetaElement>("meta[name='msapplication-TileImage']");
+    if (msTile) {
+      msTile.content = cacheBustUrl;
+    } else {
+      const newMsMeta = document.createElement('meta');
+      newMsMeta.name = 'msapplication-TileImage';
+      newMsMeta.content = cacheBustUrl;
+      document.head.appendChild(newMsMeta);
+    }
+  };
+
+  // Handle browser / mobile back button for active video modal
+  useEffect(() => {
+    if (activeVideo) {
+      savedScrollY.current = window.scrollY || document.documentElement.scrollTop || 0;
+      window.history.pushState({ modalType: 'videoModal' }, '');
+      pushedModalState.current = true;
+
+      const handlePopState = () => {
+        if (pushedModalState.current) {
+          pushedModalState.current = false;
+          setActiveVideo(null);
+          const restoreY = savedScrollY.current;
+          setTimeout(() => {
+            window.scrollTo({ top: restoreY, behavior: 'instant' as any });
+          }, 10);
+        }
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [activeVideo]);
+
+  const handleCloseVideoModal = () => {
+    if (pushedModalState.current) {
+      pushedModalState.current = false;
+      window.history.back();
+    }
+    setActiveVideo(null);
+    const restoreY = savedScrollY.current;
+    setTimeout(() => {
+      window.scrollTo({ top: restoreY, behavior: 'instant' as any });
+    }, 10);
+  };
   const [siteSettings, setSiteSettings] = useState<{
     clients: string | number;
     projects: string | number;
@@ -2802,8 +2891,17 @@ export default function App() {
       const clientsVal = getCaseInsensitiveProp(fetchedRow, 'clients');
       const projectsVal = getCaseInsensitiveProp(fetchedRow, 'projects');
       const incomeVal = getCaseInsensitiveProp(fetchedRow, 'income');
+      const faviconVal = getCaseInsensitiveProp(fetchedRow, 'favicon_url') ||
+                         getCaseInsensitiveProp(fetchedRow, 'favicon') ||
+                         getCaseInsensitiveProp(fetchedRow, 'favicon_link') ||
+                         getCaseInsensitiveProp(fetchedRow, 'icon_url');
 
-      console.log("[Supabase Settings] Extracted case-insensitive values:", { clientsVal, projectsVal, incomeVal });
+      console.log("[Supabase Settings] Extracted case-insensitive values:", { clientsVal, projectsVal, incomeVal, faviconVal });
+
+      if (faviconVal && typeof faviconVal === 'string' && faviconVal.trim() !== '') {
+        console.log("[Supabase Settings Success] Updating document favicon:", faviconVal.trim());
+        updateFaviconInHead(faviconVal.trim());
+      }
 
       setSiteSettings({
         clients: clientsVal !== undefined && clientsVal !== null ? clientsVal : 5,
@@ -2966,8 +3064,17 @@ export default function App() {
                     getCaseInsensitiveProp(fetchedRow, 'cv_url') ||
                     getCaseInsensitiveProp(fetchedRow, 'resume_url') ||
                     getCaseInsensitiveProp(fetchedRow, 'pdf_url');
+      const faviconVal = getCaseInsensitiveProp(fetchedRow, 'favicon_url') ||
+                         getCaseInsensitiveProp(fetchedRow, 'favicon') ||
+                         getCaseInsensitiveProp(fetchedRow, 'favicon_link') ||
+                         getCaseInsensitiveProp(fetchedRow, 'icon_url');
 
-      console.log("[Supabase Assets] Extracted case-insensitive values:", { logoVal, homeVal, aboutVal, cvVal });
+      console.log("[Supabase Assets] Extracted case-insensitive values:", { logoVal, homeVal, aboutVal, cvVal, faviconVal });
+
+      if (faviconVal && typeof faviconVal === 'string' && faviconVal.trim() !== '') {
+        console.log("[Supabase Assets Success] Updating document favicon:", faviconVal.trim());
+        updateFaviconInHead(faviconVal.trim());
+      }
 
       if (logoVal && logoVal.trim() !== "") {
         console.log("[Supabase Assets Success] Fetched latest logo_url from Supabase site_assets:", logoVal.trim());
@@ -4177,7 +4284,7 @@ export default function App() {
                     }}
                     className="text-[#9CA8B8] hover:text-[#4F8CFF] transition-colors text-sm font-medium text-center cursor-pointer"
                   >
-                    {page === 'reviews' ? 'Reviews' : (page === 'projects' ? 'Portfolio' : page === 'about' ? 'About' : page.charAt(0).toUpperCase() + page.slice(1))}
+                    {page === 'projects' ? 'PORTFOLIO' : page.toUpperCase()}
                   </button>
                 ))}
               </div>
@@ -4197,7 +4304,7 @@ export default function App() {
         <div className="flex flex-col items-center gap-12">
           <div className="flex flex-wrap justify-center gap-4 md:gap-5 max-w-full">
             {[
-              { Icon: FaFacebook, url: 'https://www.facebook.com/md.abu.hanif.sarker.676754/', color: '#1877F2' },
+              { Icon: FaFacebook, url: 'https://www.facebook.com/profile.php?id=61592538396121', color: '#1877F2' },
               { Icon: FaYoutube, url: 'https://www.youtube.com/@Abu_Hanif_Sarker', color: '#FF0000' },
               { Icon: FaInstagram, url: 'https://www.instagram.com/editor_abu.hanif/', color: '#E4405F' },
               { Icon: FaPinterest, url: 'https://www.pinterest.com/mdabuhanifsarker', color: '#BD081C' },
@@ -4237,7 +4344,7 @@ export default function App() {
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }}
-              onClick={() => setActiveVideo(null)}
+              onClick={handleCloseVideoModal}
               className="absolute inset-0 bg-black/95 backdrop-blur-2xl"
             />
             <motion.div 
@@ -4247,7 +4354,7 @@ export default function App() {
               className="relative z-10 w-full max-w-6xl max-h-[90vh] bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex items-center justify-center"
             >
               <button 
-                onClick={() => setActiveVideo(null)}
+                onClick={handleCloseVideoModal}
                 className="absolute top-6 right-6 z-20 p-3 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-[#63e5f1] hover:text-black transition-all border border-white/10"
               >
                 <X size={20} />
@@ -4261,7 +4368,7 @@ export default function App() {
                     const target = e.target as HTMLVideoElement;
                     console.error("Video failed to load", target.error);
                     addNotification("Video Error", "The video file format is unsupported or the link is broken.");
-                    setActiveVideo(null);
+                    handleCloseVideoModal();
                   }} 
                 />
               </div>
