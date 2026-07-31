@@ -1,14 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://wirshemphpkyyzpexzoa.supabase.co";
 const SUPABASE_KEY = "sb_publishable_tWJ1SIXe6zQbL2qpAW6xpw_XKYw58Jk";
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function getYouTubeId(url: string) {
-  if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-  const match = url.match(regExp);
+function getYouTubeId(url: string | Blob | undefined | null) {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  if (trimmed.length === 11 && !trimmed.includes('/') && !trimmed.includes('.')) {
+    return trimmed;
+  }
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = trimmed.match(regExp);
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
@@ -82,29 +86,37 @@ interface ProjectItem {
   videoUrl?: string | Blob;
   type: 'video' | 'folder';
   subItems?: ProjectItem[];
+  createdAt?: string | number;
 }
 
 function getYouTubeThumbnail(url: string | Blob | undefined | null) {
   if (!url || typeof url !== 'string') return null;
   const id = getYouTubeId(url);
   if (id) {
-    return `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+    return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
   }
   return null;
 }
 
 function getProjectThumbnail(project: ProjectItem) {
   if (project) {
+    if (project.videoUrl && typeof project.videoUrl === 'string') {
+      const ytThumb = getYouTubeThumbnail(project.videoUrl);
+      if (ytThumb) return ytThumb;
+    }
     if (project.img && typeof project.img === 'string' && project.img.trim() !== "") {
       return project.img;
     }
-    if (project.videoUrl && typeof project.videoUrl === 'string') {
-      const thumb = getYouTubeThumbnail(project.videoUrl);
-      if (thumb) return thumb;
-    }
-    return project.img || 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=1200';
   }
   return 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=1200';
+}
+
+function getCaseInsensitiveProp(obj: any, keyName: string) {
+  if (!obj || typeof obj !== 'object') return undefined;
+  if (obj[keyName] !== undefined) return obj[keyName];
+  const targetLower = keyName.toLowerCase();
+  const foundKey = Object.keys(obj).find(k => k.toLowerCase() === targetLower);
+  return foundKey ? obj[foundKey] : undefined;
 }
 
 interface Notification {
@@ -459,6 +471,11 @@ const BestWorksSection = ({
   const videoProjects = projects.filter(p => p.type === 'video');
   const bestProjects = videoProjects.filter(p => bestWorks.includes(p.id));
 
+  const videoProjectsRef = useRef<ProjectItem[]>(videoProjects);
+  videoProjectsRef.current = videoProjects;
+
+  const videoIdsKey = videoProjects.map(p => p.id).join(',');
+
   const defaultBestVideos: ProjectItem[] = [
     {
       id: 'default-best-1',
@@ -478,19 +495,83 @@ const BestWorksSection = ({
     }
   ];
 
-  let displayProjects: ProjectItem[] = [];
-  const hasDbProjects = videoProjects.some(p => p.id.toString().startsWith('sb-'));
+  const prevPairIdsRef = useRef<string[]>([]);
+  const prevVideoIdsKeyRef = useRef<string>(videoIdsKey);
 
-  if (bestProjects.length > 0) {
-    displayProjects = bestProjects.slice(0, 2);
-  } else if (videoProjects.length > 0) {
-    displayProjects = videoProjects.slice(0, 2);
-  }
+  // Function to pick 2 distinct random videos, avoiding repeating the exact same pair immediately
+  const pickRandomPair = useCallback((videoList: ProjectItem[]): ProjectItem[] => {
+    if (!videoList || videoList.length === 0) {
+      return defaultBestVideos.slice(0, 2);
+    }
 
-  if (displayProjects.length < 2 && !hasDbProjects) {
-    const symbolsNeeded = 2 - displayProjects.length;
-    displayProjects = [...displayProjects, ...defaultBestVideos.slice(0, symbolsNeeded)];
-  }
+    if (videoList.length === 1) {
+      const single = videoList[0];
+      const hasDb = videoList.some(p => p.id.toString().startsWith('sb-'));
+      if (!hasDb) {
+        const fallback = defaultBestVideos.find(d => d.id !== single.id) || defaultBestVideos[1];
+        return [single, fallback];
+      }
+      return [single];
+    }
+
+    // Generate all distinct index pairs (i, j) where i < j
+    const pairs: [number, number][] = [];
+    for (let i = 0; i < videoList.length; i++) {
+      for (let j = i + 1; j < videoList.length; j++) {
+        pairs.push([i, j]);
+      }
+    }
+
+    const prevSet = new Set(prevPairIdsRef.current);
+
+    // Exclude the pair if both IDs match the previous pair
+    const validPairs = pairs.filter(([i, j]) => {
+      const idA = videoList[i].id;
+      const idB = videoList[j].id;
+      if (prevSet.size === 2 && prevSet.has(idA) && prevSet.has(idB)) {
+        return false;
+      }
+      return true;
+    });
+
+    const poolToUse = validPairs.length > 0 ? validPairs : pairs;
+    const chosenPair = poolToUse[Math.floor(Math.random() * poolToUse.length)];
+
+    let itemA = videoList[chosenPair[0]];
+    let itemB = videoList[chosenPair[1]];
+
+    // 50% chance to swap order
+    if (Math.random() < 0.5) {
+      [itemA, itemB] = [itemB, itemA];
+    }
+
+    prevPairIdsRef.current = [itemA.id, itemB.id];
+    return [itemA, itemB];
+  }, []);
+
+  const [displayProjects, setDisplayProjects] = useState<ProjectItem[]>(() => {
+    return pickRandomPair(videoProjects);
+  });
+
+  // Timer to automatically rotate 2 random videos every 1 minute (60,000ms)
+  useEffect(() => {
+    if (prevVideoIdsKeyRef.current !== videoIdsKey) {
+      prevVideoIdsKeyRef.current = videoIdsKey;
+      setDisplayProjects(pickRandomPair(videoProjectsRef.current));
+    }
+
+    const intervalId = setInterval(() => {
+      setDisplayProjects(pickRandomPair(videoProjectsRef.current));
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, [videoIdsKey, pickRandomPair]);
+
+  // Map displayProjects against latest videoProjects state to ensure up-to-date thumbnails and titles
+  const currentDisplayProjects = displayProjects.map(dp => {
+    const latest = videoProjects.find(vp => vp.id === dp.id);
+    return latest || dp;
+  });
 
   // Admin and management state
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
@@ -527,10 +608,8 @@ const BestWorksSection = ({
     if (newProject.videoUrl && typeof newProject.videoUrl === 'string') {
       const ytid = getYouTubeId(newProject.videoUrl);
       if (ytid) {
-        setNewProject(prev => ({
-          ...prev,
-          img: `https://img.youtube.com/vi/${ytid}/maxresdefault.jpg`
-        }));
+        const expectedImg = `https://img.youtube.com/vi/${ytid}/maxresdefault.jpg`;
+        setNewProject(prev => prev.img === expectedImg ? prev : { ...prev, img: expectedImg });
       }
     }
   }, [newProject.videoUrl]);
@@ -675,7 +754,7 @@ const BestWorksSection = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        {displayProjects.map((project, idx) => (
+        {currentDisplayProjects.map((project, idx) => (
           <motion.div 
             key={project.id || idx}
             initial={{ opacity: 0, y: 20 }}
@@ -1520,10 +1599,8 @@ const Portfolio = ({
     if (newProject.videoUrl && typeof newProject.videoUrl === 'string') {
       const ytid = getYouTubeId(newProject.videoUrl);
       if (ytid) {
-        setNewProject(prev => ({
-          ...prev,
-          img: `https://img.youtube.com/vi/${ytid}/maxresdefault.jpg`
-        }));
+        const expectedImg = `https://img.youtube.com/vi/${ytid}/maxresdefault.jpg`;
+        setNewProject(prev => prev.img === expectedImg ? prev : { ...prev, img: expectedImg });
       }
     }
   }, [newProject.videoUrl]);
@@ -1826,47 +1903,101 @@ const Portfolio = ({
                     addNotification("No Video", "This project doesn't have an associated video yet.");
                   }
                 }}
-                className="glass-card aspect-video relative group overflow-hidden cursor-pointer rounded-[1.5rem] md:rounded-[2rem] border-white/5 hover:border-primary/30 active:scale-95 transition-all duration-500"
+                className={`glass-card relative group overflow-hidden cursor-pointer rounded-[1.5rem] md:rounded-[2rem] border-white/5 hover:border-primary/30 active:scale-95 transition-all duration-500 ${project.type === 'folder' ? 'aspect-video w-full' : 'min-h-[160px]'}`}
               >
-                <motion.img 
-                  initial={{ scale: 1.15 }}
-                  whileHover={{ scale: 1 }}
-                  transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                  src={getProjectThumbnail(project)} 
-                  className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100" 
-                  alt={project.title} 
-                />
-                <div className={`absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent flex flex-col justify-end p-6 md:p-10 ${project.type === 'folder' ? 'items-center text-center' : ''}`}>
-                  <div className={`flex items-center gap-3 mb-2 ${project.type === 'folder' ? 'justify-center' : ''}`}>
-                    <p className="text-primary text-[9px] md:text-[10px] font-black tracking-[0.2em]">{project.category}</p>
-                    {project.type === 'folder' && <Grid size={12} className="text-primary" />}
-                  </div>
-                  <h3 className={`text-2xl md:text-3xl font-black text-white flex ${project.type === 'folder' ? 'flex-col items-center justify-center text-center' : 'flex-row items-center justify-between'} w-full gap-4`}>
-                    <span className="truncate">
-                      {project.type === 'folder' ? renderTwoColorTitle(project.title) : project.title}
-                    </span>
-                    {project.videoUrl && typeof project.videoUrl === 'string' && (
-                      <span 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(project.videoUrl as string, '_blank');
-                        }}
-                        className="flex-shrink-0 px-3 py-1.5 bg-black/60 hover:bg-[#63e5f1] hover:text-black rounded-xl text-[#63e5f1] transition-all font-sans text-[10px] uppercase tracking-widest flex items-center gap-1.5 pointer-events-auto border border-[#63e5f1]/20 active:scale-95 shadow-md"
-                        title="Watch directly on YouTube"
-                      >
-                        Link <ArrowRight size={10} className="-rotate-45" />
+                {project.type === 'folder' ? (
+                  <>
+                    <motion.img 
+                      initial={{ scale: 1.15 }}
+                      whileHover={{ scale: 1 }}
+                      transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                      src={getProjectThumbnail(project)} 
+                      className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300" 
+                      alt={project.title} 
+                    />
+                    
+                    {/* Video count badge positioned at the bottom right corner */}
+                    <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-10 pointer-events-none">
+                      <span className="px-3.5 py-1.5 bg-black/70 backdrop-blur-md rounded-full text-[10px] md:text-xs font-bold text-slate-200 border border-white/10 shadow-xl flex items-center gap-1.5">
+                        {project.subItems?.length || 0} Video{(project.subItems?.length || 0) === 1 ? '' : 's'}
                       </span>
-                    )}
-                  </h3>
-                </div>
-                
-                {/* Admin Actions Removed from card hover per user request */}
+                    </div>
 
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-primary/10 backdrop-blur-2xl rounded-full flex items-center justify-center text-primary border border-primary/40 shadow-2xl shadow-primary/20">
-                    {project.type === 'folder' ? <Maximize2 size={24} /> : <Play fill="currentColor" size={28} />}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-black/20">
+                      <div className="w-16 h-16 md:w-20 md:h-20 bg-primary/10 backdrop-blur-2xl rounded-full flex items-center justify-center text-primary border border-primary/40 shadow-2xl shadow-primary/20">
+                        <Maximize2 size={24} />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="relative z-10 h-full flex flex-col justify-between p-6 md:p-8 bg-[#09090b]/90 backdrop-blur-md rounded-[1.5rem] md:rounded-[2rem] border border-white/10 hover:border-primary/40 transition-all duration-300">
+                    <img 
+                      src={getProjectThumbnail(project)} 
+                      className="absolute inset-0 w-full h-full object-cover opacity-15 pointer-events-none rounded-[1.5rem] md:rounded-[2rem] filter blur-sm" 
+                      alt="" 
+                    />
+
+                    {/* Thumbnail Next to Title */}
+                    <div className="relative z-10 flex items-center gap-4 sm:gap-6 w-full">
+                      <div className="relative shrink-0 w-28 sm:w-36 md:w-44 aspect-video rounded-xl overflow-hidden border border-white/20 shadow-2xl bg-black group-hover:border-primary transition-all">
+                        <img 
+                          src={getProjectThumbnail(project)} 
+                          alt={project.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (project.videoUrl && typeof project.videoUrl === 'string') {
+                              const ytid = getYouTubeId(project.videoUrl);
+                              if (ytid && !target.src.includes('hqdefault')) {
+                                target.src = `https://img.youtube.com/vi/${ytid}/hqdefault.jpg`;
+                              }
+                            }
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+                          <div className="w-8 h-8 rounded-full bg-primary text-black flex items-center justify-center shadow-lg">
+                            <Play fill="currentColor" size={14} className="ml-0.5" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-primary text-[9px] md:text-[10px] font-black tracking-[0.2em] px-2.5 py-0.5 bg-primary/10 border border-primary/20 rounded-full uppercase">
+                            {project.category}
+                          </span>
+                          {getYouTubeId(typeof project.videoUrl === 'string' ? project.videoUrl : '') && (
+                            <span className="text-[#FF0000] text-[9px] font-black tracking-wider px-2 py-0.5 bg-[#FF0000]/10 border border-[#FF0000]/20 rounded-full flex items-center gap-1">
+                              <FaYoutube size={11} /> YOUTUBE
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="text-base sm:text-lg md:text-2xl font-black text-white leading-snug tracking-tight group-hover:text-primary transition-colors line-clamp-2">
+                          {project.title}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <div className="relative z-10 pt-4 mt-4 border-t border-white/10 flex items-center justify-between">
+                      <span className="text-[11px] font-mono text-slate-400">
+                        Click to watch video
+                      </span>
+                      {project.videoUrl && typeof project.videoUrl === 'string' && (
+                        <span 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(project.videoUrl as string, '_blank');
+                          }}
+                          className="px-3.5 py-1.5 bg-primary/10 hover:bg-primary hover:text-black rounded-xl text-primary transition-all font-sans text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 pointer-events-auto border border-primary/30 active:scale-95 shadow-md"
+                          title="Watch directly on YouTube"
+                        >
+                          YouTube <ArrowRight size={10} className="-rotate-45" />
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </Reorder.Item>
             ))}
           </AnimatePresence>
@@ -2495,6 +2626,9 @@ export default function App() {
     return [];
   });
 
+  // Map category names to their custom cover_image_url from the Supabase 'categories' table
+  const [categoryCovers, setCategoryCovers] = useState<Record<string, string>>({});
+
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showAllReviews, setShowAllReviews] = useState(false);
@@ -2626,10 +2760,86 @@ export default function App() {
     tableAttempts: []
   });
 
+  // Helper to fetch categories table from Supabase
+  const fetchSupabaseCategoriesTable = async () => {
+    const catNames: string[] = [];
+    const coversMap: Record<string, string> = {};
+    let catRows: any[] = [];
+
+    const tablesToTry = ['categories', 'CATEGORIES', 'Categories'];
+    for (const tableName of tablesToTry) {
+      if (catRows.length > 0) break;
+      try {
+        const restUrl = `${SUPABASE_URL}/rest/v1/${tableName}?select=*`;
+        const res = await fetch(restUrl, {
+          method: 'GET',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (res.ok) {
+          const text = await res.text();
+          if (text) {
+            catRows = JSON.parse(text);
+            console.log(`[Supabase Sync] Loaded ${catRows.length} category rows from REST API (${tableName})`);
+          }
+        }
+      } catch (err) {
+        console.warn(`[Supabase Categories] REST fetch failed for ${tableName}:`, err);
+      }
+
+      if (catRows.length === 0) {
+        try {
+          const { data, error } = await supabaseClient.from(tableName).select('*');
+          if (!error && data && data.length > 0) {
+            catRows = data;
+            console.log(`[Supabase Sync] Loaded ${catRows.length} category rows from SDK client (${tableName})`);
+          }
+        } catch (err) {
+          console.warn(`[Supabase Categories] SDK fetch failed for ${tableName}:`, err);
+        }
+      }
+    }
+
+    if (catRows && catRows.length > 0) {
+      catRows.forEach((row: any) => {
+        const name = getCaseInsensitiveProp(row, 'name') ||
+                     getCaseInsensitiveProp(row, 'title') ||
+                     getCaseInsensitiveProp(row, 'category_name') ||
+                     getCaseInsensitiveProp(row, 'category') || '';
+
+        const coverUrl = getCaseInsensitiveProp(row, 'cover_image_url') ||
+                         getCaseInsensitiveProp(row, 'cover_image') ||
+                         getCaseInsensitiveProp(row, 'image_url') ||
+                         getCaseInsensitiveProp(row, 'cover') ||
+                         getCaseInsensitiveProp(row, 'img') ||
+                         getCaseInsensitiveProp(row, 'image') || '';
+
+        if (name && typeof name === 'string' && name.trim()) {
+          const cleanName = name.trim();
+          catNames.push(cleanName);
+          if (coverUrl && typeof coverUrl === 'string' && coverUrl.trim()) {
+            coversMap[cleanName.toUpperCase()] = coverUrl.trim();
+            coversMap[cleanName] = coverUrl.trim();
+          }
+        }
+      });
+    }
+
+    return { catNames, coversMap };
+  };
+
   // Function to fetch from Supabase dynamically
   const fetchSupabasePortfolio = async () => {
     console.log("[Supabase Sync] Fetching dynamic portfolio data...");
     setSupabaseStatus(prev => ({ ...prev, loading: true, error: null }));
+    
+    // 0. Fetch Categories Table
+    const { catNames: categoryTableNames, coversMap: categoryTableCovers } = await fetchSupabaseCategoriesTable();
+    setCategoryCovers(categoryTableCovers);
+
     let sbRows: any[] = [];
     let loadedSuccessfully = false;
     const tableAttempts: any[] = [];
@@ -2751,15 +2961,34 @@ export default function App() {
     if (loadedSuccessfully) {
       console.log(`[Supabase Sync] Raw rows fetched from Supabase:`, sbRows);
       const mappedProjects: ProjectItem[] = sbRows.map((row: any, idx: number) => {
-        const title = row.title || 'Untitled Video';
-        const link = row.youtube_url || '';
-        const rawCategory = row.category || 'PODCAST';
+        const title = getCaseInsensitiveProp(row, 'title') || getCaseInsensitiveProp(row, 'name') || 'Untitled Video';
+        const link = getCaseInsensitiveProp(row, 'youtube_url') || 
+                     getCaseInsensitiveProp(row, 'youtube') || 
+                     getCaseInsensitiveProp(row, 'video_url') || 
+                     getCaseInsensitiveProp(row, 'url') || 
+                     getCaseInsensitiveProp(row, 'link') || '';
+        const rawCategory = getCaseInsensitiveProp(row, 'category') || 
+                            getCaseInsensitiveProp(row, 'folder') || 
+                            getCaseInsensitiveProp(row, 'folder_name') || 'General';
         const normalizedCategory = rawCategory.toString().trim();
 
         const ytid = getYouTubeId(link);
-        const thumb = row.cover_image || (ytid 
-          ? `https://img.youtube.com/vi/${ytid}/maxresdefault.jpg`
-          : "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=800");
+        const explicitCover = getCaseInsensitiveProp(row, 'cover_image') || 
+                              getCaseInsensitiveProp(row, 'thumbnail') || 
+                              getCaseInsensitiveProp(row, 'img');
+
+        const thumb = (explicitCover && typeof explicitCover === 'string' && explicitCover.trim() !== '')
+          ? explicitCover.trim()
+          : (ytid 
+              ? `https://img.youtube.com/vi/${ytid}/hqdefault.jpg`
+              : "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=800");
+
+        const createdAt = getCaseInsensitiveProp(row, 'created_at') || 
+                          getCaseInsensitiveProp(row, 'createdat') || 
+                          getCaseInsensitiveProp(row, 'created_time') || 
+                          getCaseInsensitiveProp(row, 'uploaded_at') || 
+                          getCaseInsensitiveProp(row, 'date') || 
+                          row.id || idx;
 
         return {
           id: `sb-${row.id || idx}`,
@@ -2767,25 +2996,39 @@ export default function App() {
           category: normalizedCategory,
           img: thumb,
           videoUrl: link,
-          type: 'video' as const
+          type: 'video' as const,
+          createdAt: createdAt
         };
       });
 
-      // Extract unique categories from Supabase rows, preserving the exact casing typed by the user!
+      // Extract unique categories combining 'categories' table entries and 'PORTFOLIO' table entries
       const dbCategories: string[] = [];
       const seen = new Set<string>();
-      mappedProjects.forEach(p => {
-        const cat = p.category;
-        if (cat) {
-          const upper = cat.toUpperCase();
+
+      // 1. Add categories explicitly defined in 'categories' table first
+      categoryTableNames.forEach(cat => {
+        if (cat && cat.trim()) {
+          const upper = cat.trim().toUpperCase();
           if (!seen.has(upper)) {
             seen.add(upper);
-            dbCategories.push(cat);
+            dbCategories.push(cat.trim());
           }
         }
       });
 
-      console.log("[Supabase Sync] Dynamically loaded categories based exclusively on Supabase table entries:", dbCategories);
+      // 2. Add any additional categories found in 'PORTFOLIO' rows
+      mappedProjects.forEach(p => {
+        const cat = p.category;
+        if (cat && cat.trim()) {
+          const upper = cat.trim().toUpperCase();
+          if (!seen.has(upper)) {
+            seen.add(upper);
+            dbCategories.push(cat.trim());
+          }
+        }
+      });
+
+      console.log("[Supabase Sync] Dynamically loaded categories based on Supabase tables:", dbCategories);
       setCategories(dbCategories);
       setProjects(mappedProjects);
     }
@@ -3594,6 +3837,16 @@ export default function App() {
         console.log(`[Supabase Realtime] Portfolio subscription status: ${status}`);
       });
 
+    const categoriesChannel = supabaseClient
+      .channel('supabase-categories-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, (payload) => {
+        console.log('[Supabase Realtime] Change detected in public.categories table:', payload);
+        fetchSupabasePortfolio();
+      })
+      .subscribe((status) => {
+        console.log(`[Supabase Realtime] Categories subscription status: ${status}`);
+      });
+
     const settingsChannel = supabaseClient
       .channel('supabase-settings-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, (payload) => {
@@ -3634,6 +3887,7 @@ export default function App() {
 
     return () => {
       supabaseClient.removeChannel(portfolioChannel);
+      supabaseClient.removeChannel(categoriesChannel);
       supabaseClient.removeChannel(settingsChannel);
       supabaseClient.removeChannel(assetsChannel);
       supabaseClient.removeChannel(reviewsChannel);
@@ -3692,8 +3946,31 @@ export default function App() {
     return () => clearTimeout(timeoutId);
   }, [projects, reviews, aboutImage, logoUrl, categories, isLoaded, bestWorks]);
 
-  // Group projects by category
-  const groupedProjects = categories.map(cat => {
+  // Group projects by category (supporting any present and future folders dynamically)
+  const allFolderNames: string[] = [];
+  const folderSeen = new Set<string>();
+
+  categories.forEach(cat => {
+    if (cat && cat.trim()) {
+      const upper = cat.trim().toUpperCase();
+      if (!folderSeen.has(upper)) {
+        folderSeen.add(upper);
+        allFolderNames.push(cat.trim());
+      }
+    }
+  });
+
+  projects.forEach(p => {
+    if (p.category && p.category.trim()) {
+      const upper = p.category.trim().toUpperCase();
+      if (!folderSeen.has(upper)) {
+        folderSeen.add(upper);
+        allFolderNames.push(p.category.trim());
+      }
+    }
+  });
+
+  const groupedProjects = allFolderNames.map(cat => {
     const normFolderCat = cat.trim().toUpperCase();
     const subItems = projects.filter(p => {
       const normProjCat = p.category ? p.category.trim().toUpperCase() : '';
@@ -3701,9 +3978,26 @@ export default function App() {
              (normFolderCat.length > 3 && normProjCat.includes(normFolderCat)) || 
              (normProjCat.length > 3 && normFolderCat.includes(normProjCat));
     });
-    const firstProj = subItems[0];
+
+    // Sort videos inside every folder by newest upload first
+    const sortedSubItems = [...subItems].sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (timeA && timeB && !isNaN(timeA) && !isNaN(timeB) && timeA !== timeB) {
+        return timeB - timeA; // newest first
+      }
+      // Fallback: extract numbers or compare IDs descending
+      const strA = String(a.id || '');
+      const strB = String(b.id || '');
+      const numA = parseInt(strA.replace(/\D/g, ''), 10);
+      const numB = parseInt(strB.replace(/\D/g, ''), 10);
+      if (!isNaN(numA) && !isNaN(numB) && numA !== 0 && numB !== 0 && numA !== numB) {
+        return numB - numA;
+      }
+      return strB.localeCompare(strA, undefined, { numeric: true, sensitivity: 'base' });
+    });
     
-    // Choose a gorgeous default photo fallback for each predefined category if there are no videos in that folder yet
+    // Choose a gorgeous default photo fallback for each category if no custom cover_image_url is set
     let fallbackImg = "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=1200";
     const upperCat = cat.toUpperCase();
     if (upperCat.includes('WEDDING')) {
@@ -3728,15 +4022,23 @@ export default function App() {
       fallbackImg = "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=1200";
     } else if (upperCat.includes('NATURAL')) {
       fallbackImg = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80&w=1200";
+    } else if (upperCat.includes('PROMOTIONAL')) {
+      fallbackImg = "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=1200";
     }
+
+    // Always use categories.cover_image_url if present; never use YouTube thumbnails for folder covers
+    const customCategoryCover = categoryCovers[normFolderCat] || categoryCovers[cat.trim()];
+    const folderImg = (customCategoryCover && typeof customCategoryCover === 'string' && customCategoryCover.trim() !== '')
+      ? customCategoryCover.trim()
+      : fallbackImg;
 
     return {
       id: cat,
       title: cat,
       category: "FOLDER",
       type: 'folder' as const,
-      img: firstProj ? getProjectThumbnail(firstProj) : fallbackImg,
-      subItems: subItems
+      img: folderImg,
+      subItems: sortedSubItems
     };
   });
 
