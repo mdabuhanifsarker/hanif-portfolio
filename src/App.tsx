@@ -1223,14 +1223,16 @@ const ReviewsSection = ({
   selectedRating,
   setSelectedRating,
   addNotification,
-  onSubmitReview
+  onSubmitReview,
+  showReviewList = true
 }: {
   reviews: Review[],
   setReviews: React.Dispatch<React.SetStateAction<Review[]>>,
   selectedRating: number,
   setSelectedRating: (rating: number) => void,
   addNotification: (title: string, message: string) => void,
-  onSubmitReview: (rating: number | null, opinion: string, email: string) => Promise<boolean>
+  onSubmitReview: (rating: number | null, opinion: string, email: string) => Promise<boolean>,
+  showReviewList?: boolean
 }) => {
   return (
     <section className="py-16 md:py-24 px-6 md:px-12 max-w-7xl mx-auto space-y-16">
@@ -1321,7 +1323,7 @@ const ReviewsSection = ({
         </div>
       </div>
 
-      <ReviewList reviews={reviews} />
+      {showReviewList && <ReviewList reviews={reviews} />}
     </section>
   );
 };
@@ -4379,6 +4381,7 @@ export default function App() {
                 setSelectedRating={setSelectedRating}
                 addNotification={addNotification}
                 onSubmitReview={handleReviewSubmit}
+                showReviewList={false}
               />
               <ContactSection handleEmailSubmit={handleEmailSubmit} isSending={isEmailSending} />
             </>
