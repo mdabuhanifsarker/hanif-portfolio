@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://wirshemphpkyyzpexzoa.supabase.co";
@@ -39,6 +39,7 @@ import {
   Menu,
   X,
   ChevronDown,
+  ChevronUp,
   Upload,
   Phone,
   Trash2,
@@ -61,11 +62,6 @@ import {
   FaTelegramPlane 
 } from 'react-icons/fa';
 
-// @ts-ignore
-import defaultProfileImg from './assets/images/hanif.png';
-// @ts-ignore
-import defaultLogoImg from './assets/images/logo.png';
-
 // --- Types ---
 type Page = 'home' | 'projects' | 'reviews' | 'about' | 'contact';
 
@@ -73,9 +69,10 @@ interface Review {
   id: string;
   name: string;
   email: string;
-  rating: number;
+  rating: number | null;
   comment: string;
   date: string;
+  createdAt?: number;
 }
 
 interface ProjectItem {
@@ -200,7 +197,6 @@ const Sidebar = ({ isOpen, onClose, setPage, currentPage }: { isOpen: boolean, o
 );
 
 const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Page, setPage: (p: Page) => void, onOpenMenu: () => void, logoUrl: string | null }) => {
-  const displayLogo = logoUrl || defaultLogoImg;
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 md:px-12 py-4 md:py-5 bg-[#0B0D10]/80 backdrop-blur-[20px] border-b border-[#252D37]">
       <motion.div 
@@ -209,13 +205,17 @@ const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Pa
         className="flex items-center gap-3 text-[#4F8CFF] font-black text-xl md:text-2xl tracking-tight cursor-pointer hover:brightness-110 transition-all"
         onClick={() => setPage('home')}
       >
-        {displayLogo && (
+        {logoUrl ? (
           <img 
-            src={displayLogo} 
+            src={logoUrl} 
             alt="Logo" 
             referrerPolicy="no-referrer"
             className="w-10 h-10 md:w-12 md:h-12 object-contain rounded-full border border-[#252D37] bg-[#12161B]" 
           />
+        ) : (
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#12161B] border border-[#252D37] animate-pulse flex items-center justify-center shrink-0">
+            <div className="w-5 h-5 rounded-full bg-white/10" />
+          </div>
         )}
         ABU HANIF
       </motion.div>
@@ -279,7 +279,7 @@ const MobileNav = ({ current, setPage }: { current: Page, setPage: (p: Page) => 
 
 // --- Sections ---
 
-const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void, aboutImage: string, setPage: (p: Page) => void, cvUrl?: string | null }) => (
+const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void, aboutImage: string | null, setPage: (p: Page) => void, cvUrl?: string | null }) => (
   <section className="flex flex-col pt-12 md:pt-16 pb-24 px-6 md:px-12 relative overflow-hidden bg-[#02040A] -mt-[35px]">
     {/* Left-edge bright cyan-blue lens flare bleed */}
     <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-gradient-to-br from-[#0052FF]/20 to-[#00F0FF]/15 blur-[150px] rounded-full pointer-events-none opacity-80" />
@@ -417,11 +417,18 @@ const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void
           {/* Concentric border and image mask */}
           <div className="w-[72%] h-[72%] rounded-full p-1 bg-gradient-to-tr from-[#1E2B43] via-[#0C1220] to-[#0084FF]/40 relative z-10 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
             <div className="w-full h-full rounded-full overflow-hidden border border-[#1E2B43] relative bg-[#040814]">
-              <img 
-                src={aboutImage} 
-                className="w-full h-full object-cover rounded-full"
-                alt="Abu Hanif Profile"
-              />
+              {aboutImage ? (
+                <img 
+                  src={aboutImage} 
+                  className="w-full h-full object-cover rounded-full"
+                  alt="Abu Hanif Profile"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full bg-[#0C1220] animate-pulse flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10" />
+                </div>
+              )}
             </div>
           </div>
 
@@ -1094,6 +1101,122 @@ const BestWorksSection = ({
   );
 };
 
+const ReviewList = ({ reviews }: { reviews: Review[] }) => {
+  const [showAll, setShowAll] = useState(false);
+
+  // Sort reviews newest first
+  const sortedReviews = useMemo(() => {
+    return [...reviews].sort((a, b) => {
+      const timeA = a.createdAt || (a.date ? new Date(a.date).getTime() : 0);
+      const timeB = b.createdAt || (b.date ? new Date(b.date).getTime() : 0);
+      return timeB - timeA;
+    });
+  }, [reviews]);
+
+  const reviewsWithRating = sortedReviews.filter(r => r.rating !== null && r.rating !== undefined && r.rating !== 0);
+  const averageScoreVal = reviewsWithRating.length > 0
+    ? (reviewsWithRating.reduce((sum, r) => sum + Number(r.rating), 0) / reviewsWithRating.length).toFixed(1)
+    : "0.0";
+
+  const displayedReviews = showAll ? sortedReviews : sortedReviews.slice(0, 2);
+
+  return (
+    <div className="space-y-12 w-full max-w-4xl mx-auto pt-4">
+      <div id="community-voice-heading" className="flex items-center justify-between border-b border-[#252D37] pb-8 scroll-mt-28">
+        <h3 className="text-2xl font-bold text-[#F5F7FA] uppercase tracking-tight flex items-center gap-3">
+          Community Voice <span className="text-[#4F8CFF] text-lg font-bold">({sortedReviews.length})</span>
+        </h3>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <div className="text-[#4F8CFF] font-bold text-xl">{averageScoreVal}</div>
+            <div className="text-[9px] font-bold text-[#697586] uppercase tracking-widest">Average Score</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8">
+        <AnimatePresence mode="popLayout">
+          {displayedReviews.map((rev, idx) => {
+            const firstChar = rev.email ? rev.email.charAt(0) : (rev.name ? rev.name.charAt(0) : "A");
+            return (
+              <motion.div 
+                layout
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25, delay: idx * 0.04, ease: "easeOut" }}
+                key={rev.id} 
+                className="bg-[#171C22] border border-[#252D37] p-8 md:p-10 rounded-[22px] space-y-6 group hover:border-[#4F8CFF]/20 transition-all duration-300 shadow-[0_15px_45px_rgba(0,0,0,0.15)]"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex gap-4 items-center min-w-0">
+                    <div className="w-12 h-12 bg-[#4F8CFF]/10 rounded-[14px] flex items-center justify-center text-[#4F8CFF] font-bold text-lg border border-[#4F8CFF]/20 uppercase shrink-0">
+                      {firstChar}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[#F5F7FA] font-bold text-base tracking-tight uppercase truncate">
+                        {rev.email ? rev.email.split('@')[0] : (rev.name || "Anonymous Client")}
+                      </p>
+                      {rev.email && (
+                        <p className="text-[#697586] text-[10px] font-bold uppercase tracking-widest truncate">
+                          {rev.email}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {rev.rating !== null && rev.rating !== undefined && rev.rating !== 0 && (
+                    <div className="flex items-center gap-1.5 bg-[#4F8CFF]/10 px-3 py-1.5 rounded-full text-[#4F8CFF] shrink-0">
+                      <Star size={12} fill="currentColor" />
+                      <span className="font-bold text-xs">{rev.rating}.0</span>
+                    </div>
+                  )}
+                </div>
+                {rev.comment && rev.comment.trim() !== "" && (
+                  <div className="relative text-slate-300 font-normal leading-relaxed italic text-base border-l-2 border-[#4F8CFF]/20 pl-6 py-1 break-words">
+                    "{rev.comment}"
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-[9px] font-bold text-[#697586] uppercase tracking-[0.2em] pt-4 border-t border-[#252D37]">
+                  <span>Verified Experience</span>
+                  <span>{rev.date}</span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+        
+        {sortedReviews.length === 0 && (
+          <div className="py-20 text-center glass-card border-dashed border-white/10 rounded-[3rem]">
+            <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-xs">No reviews yet. Be the first to share your experience!</p>
+          </div>
+        )}
+
+        {sortedReviews.length > 2 && (
+          <div className="flex justify-center pt-4">
+            <button
+              onClick={() => {
+                if (showAll) {
+                  setShowAll(false);
+                  const headingEl = document.getElementById('community-voice-heading');
+                  if (headingEl) {
+                    headingEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                } else {
+                  setShowAll(true);
+                }
+              }}
+              className="px-6 py-2.5 bg-[#252D37] hover:bg-[#4F8CFF] text-[#F5F7FA] font-bold text-xs uppercase tracking-widest rounded-full transition-all duration-300 shadow-md cursor-pointer flex items-center gap-2 border border-white/5 hover:border-transparent active:scale-95"
+            >
+              <span>{showAll ? 'Show Less' : 'Show More'}</span>
+              {showAll ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const ReviewsSection = ({
   reviews,
   setReviews,
@@ -1197,6 +1320,8 @@ const ReviewsSection = ({
           </form>
         </div>
       </div>
+
+      <ReviewList reviews={reviews} />
     </section>
   );
 };
@@ -1555,13 +1680,13 @@ const Portfolio = ({
   const renderTwoColorTitle = (text: string) => {
     const words = text.trim().split(/\s+/);
     if (words.length <= 1) {
-      return <span className="text-white">{text}</span>;
+      return <span className="text-white text-[42px]">{text}</span>;
     }
     const firstWord = words[0];
     const restOfWords = words.slice(1).join(' ');
     return (
       <>
-        <span className="text-white">{firstWord}</span> <span className="text-[#4F8CFF]">{restOfWords}</span>
+        <span className="text-white text-[42px]">{firstWord}</span> <span className="text-[#4F8CFF] text-[42px]">{restOfWords}</span>
       </>
     );
   };
@@ -1697,12 +1822,12 @@ const Portfolio = ({
                 <ArrowRight size={20} className="rotate-180" />
               </button>
             )}
-            <h2 id="creative-showcase-heading" className="text-4xl md:text-5xl font-black text-[#4F8CFF] tracking-tighter text-center flex items-center justify-center gap-2">
+            <h2 id="creative-showcase-heading" className="text-[42px] font-black text-[#4F8CFF] tracking-tighter text-center flex items-center justify-center gap-2 leading-tight">
               {activeFolder ? (
                 renderTwoColorTitle(activeFolder.title)
               ) : (
                 <>
-                  <span className="text-white">Creative</span> Showcase
+                  <span className="text-white text-[42px]">Creative</span> <span className="text-[#4F8CFF] text-[42px]">Showcase</span>
                 </>
               )}
             </h2>
@@ -2338,28 +2463,26 @@ const Portfolio = ({
                   </div>
 
                   <div className="flex flex-col items-center gap-6 p-8 bg-white/[0.02] border-2 border-dashed border-white/10 rounded-[2rem]">
-                    {logoUrl || defaultLogoImg ? (
+                    {logoUrl ? (
                       <div className="relative group">
                         <img 
-                          src={logoUrl || defaultLogoImg} 
+                          src={logoUrl} 
                           alt="Logo Preview" 
                           referrerPolicy="no-referrer"
                           className="w-24 h-24 md:w-32 md:h-32 object-contain rounded-full bg-black border border-white/10" 
                         />
-                        {logoUrl && (
-                          <button 
-                            onClick={async () => {
-                              setLogoUrl(null);
-                              addNotification("Logo Removed", "Your site logo has been removed.");
-                              if (onSaveLogoUrl) {
-                                await onSaveLogoUrl(null);
-                              }
-                            }}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
+                        <button 
+                          onClick={async () => {
+                            setLogoUrl(null);
+                            addNotification("Logo Removed", "Your site logo has been removed.");
+                            if (onSaveLogoUrl) {
+                              await onSaveLogoUrl(null);
+                            }
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     ) : (
                       <div className="w-24 h-24 md:w-32 md:h-32 bg-white/5 rounded-full flex items-center justify-center text-slate-600 border border-white/5">
@@ -2632,9 +2755,9 @@ export default function App() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const [aboutImage, setAboutImage] = useState(defaultProfileImg);
-  const [homeImageUrl, setHomeImageUrl] = useState<string>(defaultProfileImg);
-  const [aboutImageUrl, setAboutImageUrl] = useState<string>(defaultProfileImg);
+  const [aboutImage, setAboutImage] = useState<string | null>(null);
+  const [homeImageUrl, setHomeImageUrl] = useState<string | null>(null);
+  const [aboutImageUrl, setAboutImageUrl] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [bestWorks, setBestWorks] = useState<string[]>([]);
@@ -2643,8 +2766,8 @@ export default function App() {
   const savedScrollY = useRef<number>(0);
   const pushedModalState = useRef<boolean>(false);
 
-  // Helper to dynamically create/update all platform favicons (Android, Apple, Windows, Shortcut) in document <head>
-  const updateFaviconInHead = (rawUrl: string) => {
+  // Helper to dynamically create/update all platform favicons and OG/Twitter metadata in document <head>
+  const updateFaviconInHead = (rawUrl: string, ogUrl?: string) => {
     if (!rawUrl || typeof rawUrl !== 'string') return;
     const cleanUrl = rawUrl.trim();
     if (!cleanUrl) return;
@@ -2689,6 +2812,40 @@ export default function App() {
       newMsMeta.name = 'msapplication-TileImage';
       newMsMeta.content = cacheBustUrl;
       document.head.appendChild(newMsMeta);
+    }
+
+    // 4. Open Graph & Twitter Image Meta Tags
+    const ogImgToUse = (ogUrl && typeof ogUrl === 'string' && ogUrl.trim() !== '') ? ogUrl.trim() : cleanUrl;
+    const cacheBustOg = ogImgToUse.includes('?') ? `${ogImgToUse}&v=${Date.now()}` : `${ogImgToUse}?v=${Date.now()}`;
+
+    const ogImage = document.querySelector<HTMLMetaElement>("meta[property='og:image']");
+    if (ogImage) {
+      ogImage.content = cacheBustOg;
+    } else {
+      const newOg = document.createElement('meta');
+      newOg.setAttribute('property', 'og:image');
+      newOg.content = cacheBustOg;
+      document.head.appendChild(newOg);
+    }
+
+    const ogSecureImage = document.querySelector<HTMLMetaElement>("meta[property='og:image:secure_url']");
+    if (ogSecureImage) {
+      ogSecureImage.content = cacheBustOg;
+    } else {
+      const newOgSec = document.createElement('meta');
+      newOgSec.setAttribute('property', 'og:image:secure_url');
+      newOgSec.content = cacheBustOg;
+      document.head.appendChild(newOgSec);
+    }
+
+    const twImage = document.querySelector<HTMLMetaElement>("meta[name='twitter:image']");
+    if (twImage) {
+      twImage.content = cacheBustOg;
+    } else {
+      const newTw = document.createElement('meta');
+      newTw.name = 'twitter:image';
+      newTw.content = cacheBustOg;
+      document.head.appendChild(newTw);
     }
   };
 
@@ -3138,12 +3295,33 @@ export default function App() {
                          getCaseInsensitiveProp(fetchedRow, 'favicon') ||
                          getCaseInsensitiveProp(fetchedRow, 'favicon_link') ||
                          getCaseInsensitiveProp(fetchedRow, 'icon_url');
+      const ogVal = getCaseInsensitiveProp(fetchedRow, 'og_image') ||
+                    getCaseInsensitiveProp(fetchedRow, 'og_image_url') ||
+                    getCaseInsensitiveProp(fetchedRow, 'twitter_image');
+      const logoVal = getCaseInsensitiveProp(fetchedRow, 'logo_url') ||
+                      getCaseInsensitiveProp(fetchedRow, 'logo');
+      const homeVal = getCaseInsensitiveProp(fetchedRow, 'home_image_url') ||
+                      getCaseInsensitiveProp(fetchedRow, 'home_image');
+      const aboutVal = getCaseInsensitiveProp(fetchedRow, 'about_image_url') ||
+                       getCaseInsensitiveProp(fetchedRow, 'about_image');
 
-      console.log("[Supabase Settings] Extracted case-insensitive values:", { clientsVal, projectsVal, incomeVal, faviconVal });
+      console.log("[Supabase Settings] Extracted case-insensitive values:", { clientsVal, projectsVal, incomeVal, faviconVal, ogVal, logoVal });
 
-      if (faviconVal && typeof faviconVal === 'string' && faviconVal.trim() !== '') {
-        console.log("[Supabase Settings Success] Updating document favicon:", faviconVal.trim());
-        updateFaviconInHead(faviconVal.trim());
+      const favToUse = faviconVal || logoVal || homeVal;
+      if (favToUse && typeof favToUse === 'string' && favToUse.trim() !== '') {
+        console.log("[Supabase Settings Success] Updating document head assets:", favToUse.trim());
+        updateFaviconInHead(favToUse.trim(), ogVal || logoVal || homeVal);
+      }
+
+      if (logoVal && typeof logoVal === 'string' && logoVal.trim() !== '') {
+        setLogoUrl(logoVal.trim());
+      }
+      if (homeVal && typeof homeVal === 'string' && homeVal.trim() !== '') {
+        setHomeImageUrl(homeVal.trim());
+      }
+      if (aboutVal && typeof aboutVal === 'string' && aboutVal.trim() !== '') {
+        setAboutImageUrl(aboutVal.trim());
+        setAboutImage(aboutVal.trim());
       }
 
       setSiteSettings({
@@ -3299,9 +3477,14 @@ export default function App() {
 
     // Apply fetched values or print final error logs
     if (fetchedRow) {
-      const logoVal = getCaseInsensitiveProp(fetchedRow, 'logo_url');
-      const homeVal = getCaseInsensitiveProp(fetchedRow, 'home_image_url');
-      const aboutVal = getCaseInsensitiveProp(fetchedRow, 'about_image_url');
+      const logoVal = getCaseInsensitiveProp(fetchedRow, 'logo_url') ||
+                      getCaseInsensitiveProp(fetchedRow, 'logo');
+      const homeVal = getCaseInsensitiveProp(fetchedRow, 'home_image_url') ||
+                      getCaseInsensitiveProp(fetchedRow, 'home_image') ||
+                      getCaseInsensitiveProp(fetchedRow, 'homepage_image');
+      const aboutVal = getCaseInsensitiveProp(fetchedRow, 'about_image_url') ||
+                       getCaseInsensitiveProp(fetchedRow, 'about_image') ||
+                       getCaseInsensitiveProp(fetchedRow, 'profile_image');
       const cvVal = getCaseInsensitiveProp(fetchedRow, 'CV') ||
                     getCaseInsensitiveProp(fetchedRow, 'cv') ||
                     getCaseInsensitiveProp(fetchedRow, 'cv_url') ||
@@ -3311,12 +3494,16 @@ export default function App() {
                          getCaseInsensitiveProp(fetchedRow, 'favicon') ||
                          getCaseInsensitiveProp(fetchedRow, 'favicon_link') ||
                          getCaseInsensitiveProp(fetchedRow, 'icon_url');
+      const ogVal = getCaseInsensitiveProp(fetchedRow, 'og_image') ||
+                    getCaseInsensitiveProp(fetchedRow, 'og_image_url') ||
+                    getCaseInsensitiveProp(fetchedRow, 'twitter_image');
 
-      console.log("[Supabase Assets] Extracted case-insensitive values:", { logoVal, homeVal, aboutVal, cvVal, faviconVal });
+      console.log("[Supabase Assets] Extracted case-insensitive values:", { logoVal, homeVal, aboutVal, cvVal, faviconVal, ogVal });
 
-      if (faviconVal && typeof faviconVal === 'string' && faviconVal.trim() !== '') {
-        console.log("[Supabase Assets Success] Updating document favicon:", faviconVal.trim());
-        updateFaviconInHead(faviconVal.trim());
+      const favToUse = faviconVal || logoVal || homeVal;
+      if (favToUse && typeof favToUse === 'string' && favToUse.trim() !== '') {
+        console.log("[Supabase Assets Success] Updating document head assets:", favToUse.trim());
+        updateFaviconInHead(favToUse.trim(), ogVal || logoVal || homeVal);
       }
 
       if (logoVal && logoVal.trim() !== "") {
@@ -3790,8 +3977,6 @@ export default function App() {
           });
           if (savedAbout && savedAbout.startsWith('data:image/')) {
             setAboutImage(savedAbout);
-          } else {
-            setAboutImage(defaultProfileImg);
           }
 
           // Always fetch latest logo_url dynamically from Supabase site_assets on load.
@@ -4223,15 +4408,8 @@ export default function App() {
             />
           )}
           
-          {currentPage === 'reviews' && (() => {
-            const reviewsWithRating = reviews.filter(r => r.rating !== null && r.rating !== undefined && r.rating !== 0);
-            const averageScoreVal = reviewsWithRating.length > 0
-              ? (reviewsWithRating.reduce((sum, r) => sum + Number(r.rating), 0) / reviewsWithRating.length).toFixed(1)
-              : "0.0";
-            const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 2);
-
-            return (
-              <div className="py-24 md:py-32 px-6 md:px-12 max-w-5xl mx-auto space-y-24">
+          {currentPage === 'reviews' && (
+            <div className="py-24 md:py-32 px-6 md:px-12 max-w-5xl mx-auto space-y-24">
                 <header className="text-center space-y-6">
                   <h2 className="text-5xl md:text-8xl font-bold text-white tracking-tighter leading-none -letter-spacing-[0.03em]">
                     Client <br/><span className="text-[#4F8CFF]">Experiences.</span>
@@ -4323,97 +4501,26 @@ export default function App() {
                 </div>
 
                 {/* Review List */}
-                <div className="space-y-12">
-                  <div className="flex items-center justify-between border-b border-[#252D37] pb-8">
-                    <h3 className="text-2xl font-bold text-[#F5F7FA] uppercase tracking-tight">Community Voice ({reviews.length})</h3>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div className="text-[#4F8CFF] font-bold text-xl">{averageScoreVal}</div>
-                        <div className="text-[9px] font-bold text-[#697586] uppercase tracking-widest">Average Score</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-8">
-                    <AnimatePresence>
-                      {displayedReviews.map((rev, idx) => {
-                        const firstChar = rev.email ? rev.email.charAt(0) : "A";
-                        return (
-                          <motion.div 
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.05, ease: "easeOut" }}
-                            key={rev.id} 
-                            className="bg-[#171C22] border border-[#252D37] p-8 md:p-10 rounded-[22px] space-y-6 group hover:border-[#4F8CFF]/20 transition-all duration-300 shadow-[0_15px_45px_rgba(0,0,0,0.15)]"
-                          >
-                            <div className="flex justify-between items-start">
-                              <div className="flex gap-4 items-center">
-                                <div className="w-12 h-12 bg-[#4F8CFF]/10 rounded-[14px] flex items-center justify-center text-[#4F8CFF] font-bold text-lg border border-[#4F8CFF]/20 uppercase">
-                                  {firstChar}
-                                </div>
-                                <div>
-                                  <p className="text-[#F5F7FA] font-bold text-base tracking-tight uppercase">
-                                    {rev.email ? rev.email.split('@')[0] : "Anonymous Client"}
-                                  </p>
-                                  {rev.email && (
-                                    <p className="text-[#697586] text-[10px] font-bold uppercase tracking-widest">
-                                      {rev.email}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                              {rev.rating !== null && rev.rating !== undefined && rev.rating !== 0 && (
-                                <div className="flex items-center gap-1.5 bg-[#4F8CFF]/10 px-3 py-1.5 rounded-full text-[#4F8CFF]">
-                                  <Star size={12} fill="currentColor" />
-                                  <span className="font-bold text-xs">{rev.rating}.0</span>
-                                </div>
-                              )}
-                            </div>
-                            {rev.comment && rev.comment.trim() !== "" && (
-                              <div className="relative text-slate-300 font-normal leading-relaxed italic text-base border-l-2 border-[#4F8CFF]/20 pl-6 py-1">
-                                "{rev.comment}"
-                              </div>
-                            )}
-                            <div className="flex justify-between items-center text-[9px] font-bold text-[#697586] uppercase tracking-[0.2em] pt-4 border-t border-[#252D37]">
-                              <span>Verified Experience</span>
-                              <span>{rev.date}</span>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </AnimatePresence>
-                    
-                    {reviews.length === 0 && (
-                      <div className="py-20 text-center glass-card border-dashed border-white/10 rounded-[3rem]">
-                        <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-xs">No reviews yet. Be the first to share your experience!</p>
-                      </div>
-                    )}
-
-                    {reviews.length > 2 && !showAllReviews && (
-                      <div className="flex justify-center pt-4">
-                        <button
-                          onClick={() => setShowAllReviews(true)}
-                          className="px-6 py-2.5 bg-[#252D37] hover:bg-[#4F8CFF] text-[#F5F7FA] font-bold text-xs uppercase tracking-widest rounded-full transition-all duration-300 shadow-md cursor-pointer flex items-center gap-2 border border-white/5 hover:border-transparent active:scale-95"
-                        >
-                          Show More
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <ReviewList reviews={reviews} />
               </div>
-            );
-          })()}
+          )}
 
           {currentPage === 'about' && (
             <div className="py-24 md:py-32 px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-24 items-center max-w-7xl mx-auto">
               <div className="aspect-[3/4] bg-[#171C22] border border-[#252D37] relative p-2 md:p-3 rounded-[22px] overflow-hidden group shadow-[0_20px_60px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_60px_rgba(79,140,255,0.1)] transition-all duration-500">
-                <img 
-                   src={aboutImageUrl} 
-                   className="w-full h-full object-cover rounded-[14px] relative z-10"
-                   alt="Abu Hanif - Senior Post-Production Specialist" 
-                 />
-                 <div className="absolute inset-0 bg-black/10 mix-blend-overlay z-[5]" />
+                {aboutImageUrl ? (
+                  <img 
+                    src={aboutImageUrl} 
+                    className="w-full h-full object-cover rounded-[14px] relative z-10"
+                    alt="Abu Hanif - Senior Post-Production Specialist" 
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-[14px] bg-[#12161B] animate-pulse flex items-center justify-center relative z-10">
+                    <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/10 mix-blend-overlay z-[5]" />
                  
                  {isAdmin && (
                    <div 
@@ -4452,16 +4559,16 @@ export default function App() {
                        onClick={(e) => {
                          e.stopPropagation();
                          e.preventDefault();
-                         setAboutImage(defaultProfileImg);
-                         setAboutImageUrl(defaultProfileImg);
-                         addNotification("Photo Reset", "Profile photo restored to your default actual photo.");
+                         setAboutImage(null);
+                         setAboutImageUrl(null);
+                         addNotification("Photo Cleared", "Profile photo cleared.");
                        }}
                        className="flex flex-col items-center justify-center cursor-pointer text-red-400 hover:text-red-350 transition-all group/btn"
                      >
                        <div className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center mb-1.5 group-hover/btn:scale-110 group-hover/btn:bg-red-500/20 transition-all">
-                         <RotateCcw size={14} />
+                         <Trash2 size={14} />
                        </div>
-                       <span className="text-[9px] font-bold uppercase tracking-widest">Reset Default</span>
+                       <span className="text-[9px] font-bold uppercase tracking-widest">Clear Photo</span>
                      </button>
                    </div>
                  )}
