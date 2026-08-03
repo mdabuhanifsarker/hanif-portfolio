@@ -3,21 +3,22 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-space: "Space Grotesk", sans-serif;
   --font-caveat: "Caveat", cursive;
   
-  --color-primary-bg: #02040A;
-  --color-secondary-bg: #070C15;
-  --color-elevated-card: #0C1220;
-  --color-navbar-bg: rgba(2, 4, 10, 0.85);
-  --color-footer-bg: #010205;
-  --color-divider-color: #151F32;
+  --color-primary-bg: #0B0F14;
+  --color-secondary-bg: #121820;
+  --color-elevated-card: #181E25;
+  --color-navbar-bg: #10151C;
+  --color-footer-bg: #0D1218;
+  --color-divider-color: rgba(183, 227, 106, 0.15);
   --color-primary-text: #F5F7FA;
-  --color-secondary-text: #9CA8B8;
-  --color-muted-text: #697586;
-  --color-accent-blue: #0066FF;
-  --color-accent-hover: #3385FF;
-  --color-border-color: #1E2B43;
-  --color-input-bg: #040814;
+  --color-secondary-text: #A9B1BB;
+  --color-muted-text: #7E8793;
+  --color-accent-blue: #B7E36A;
+  --color-accent-hover: #C8F27A;
+  --color-border-color: rgba(183, 227, 106, 0.20);
+  --color-input-bg: #10151C;
   
   --radius-card: 24px;
   --radius-btn: 999px;
@@ -26,14 +27,14 @@
 
 @layer base {
   body {
-    @apply bg-[#02040A] text-[#F5F7FA] antialiased font-sans tracking-tight;
+    @apply bg-[#0B0F14] text-[#F5F7FA] antialiased font-sans tracking-tight;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-[#0C1220] border border-[#1E2B43] shadow-[0_20px_60px_rgba(0,0,0,0.55)] rounded-[24px] transition-all duration-300;
+    @apply bg-[#181E25] border border-[#B7E36A]/20 shadow-[0_20px_60px_rgba(0,0,0,0.55)] rounded-[24px] transition-all duration-300;
   }
 }
 

@@ -48,6 +48,14 @@ import {
   MapPin,
   Send,
   RotateCcw,
+  Download,
+  Box,
+  Rocket,
+  Headphones,
+  Check,
+  ChevronRight,
+  Sparkles,
+  Edit3,
 } from 'lucide-react';
 
 import { 
@@ -63,7 +71,7 @@ import {
 } from 'react-icons/fa';
 
 // --- Types ---
-type Page = 'home' | 'projects' | 'reviews' | 'about' | 'contact';
+type Page = 'home' | 'projects' | 'services' | 'reviews' | 'about' | 'contact';
 
 interface Review {
   id: string;
@@ -147,31 +155,31 @@ const Sidebar = ({ isOpen, onClose, setPage, currentPage }: { isOpen: boolean, o
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed top-0 right-0 h-screen w-80 bg-[#0B0D10] border-l border-[#252D37] z-[101] p-12 flex flex-col gap-12 shadow-[0_20px_60px_rgba(0,0,0,0.35)]"
+          className="fixed top-0 right-0 h-screen w-80 bg-[#10151C] border-l border-white/10 z-[101] p-12 flex flex-col gap-12 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
         >
           <div className="flex justify-between items-center">
-            <span className="text-[#4F8CFF] font-black text-sm tracking-widest uppercase">NAVIGATE</span>
-            <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors border border-[#252D37]">
+            <span className="text-[#B7E36A] font-extrabold text-sm tracking-widest uppercase font-['Space_Grotesk']">NAVIGATE</span>
+            <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-[#A9B1BB] hover:text-white transition-colors border border-white/10">
               <X size={18} />
             </button>
           </div>
 
-          <div className="flex flex-col gap-6">
-            {(['home', 'projects', 'reviews', 'about', 'contact'] as Page[]).map((item) => (
+          <div className="flex flex-col gap-6 font-['Space_Grotesk']">
+            {(['home', 'projects', 'services', 'reviews', 'contact', 'about'] as Page[]).map((item) => (
               <button
                 key={item}
                 onClick={() => { setPage(item); onClose(); }}
                 className={`text-left text-3xl font-bold tracking-tight transition-all duration-300 hover:translate-x-2 ${
-                  currentPage === item ? 'text-[#4F8CFF]' : 'text-slate-300 hover:text-[#4F8CFF]'
+                  currentPage === item ? 'text-[#B7E36A]' : 'text-[#F5F7FA] hover:text-[#B7E36A]'
                 }`}
               >
-                {item === 'projects' ? 'PORTFOLIO' : item.toUpperCase()}
+                {item === 'projects' ? 'PORTFOLIO' : item === 'services' ? 'SERVICES' : item.toUpperCase()}
               </button>
             ))}
           </div>
 
           <div className="mt-auto space-y-6">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Connect</p>
+            <p className="text-[10px] font-black text-[#7E8793] uppercase tracking-widest font-['Inter']">Connect</p>
             <div className="flex gap-4">
                {[
                  { Icon: Mail, link: "mailto:mdabuhanifsarker91@gmail.com" },
@@ -183,7 +191,7 @@ const Sidebar = ({ isOpen, onClose, setPage, currentPage }: { isOpen: boolean, o
                    href={item.link}
                    target={item.link.startsWith('http') ? "_blank" : undefined}
                    rel={item.link.startsWith('http') ? "noreferrer" : undefined}
-                   className="p-3 bg-white/5 rounded-2xl text-slate-450 hover:text-[#4F8CFF] transition-colors border border-[#252D37] cursor-pointer"
+                   className="p-3 bg-white/5 rounded-2xl text-[#A9B1BB] hover:text-[#B7E36A] transition-colors border border-white/10 cursor-pointer"
                  >
                    <item.Icon size={18} />
                  </a>
@@ -198,11 +206,11 @@ const Sidebar = ({ isOpen, onClose, setPage, currentPage }: { isOpen: boolean, o
 
 const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Page, setPage: (p: Page) => void, onOpenMenu: () => void, logoUrl: string | null }) => {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 md:px-12 py-4 md:py-5 bg-[#0B0D10]/80 backdrop-blur-[20px] border-b border-[#252D37]">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 md:px-12 py-4 md:py-5 bg-[#10151C]/90 backdrop-blur-[20px] border-b border-white/10">
       <motion.div 
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="flex items-center gap-3 text-[#4F8CFF] font-black text-xl md:text-2xl tracking-tight cursor-pointer hover:brightness-110 transition-all"
+        className="flex items-center gap-3 text-[#B7E36A] font-extrabold text-xl md:text-2xl tracking-tight cursor-pointer hover:brightness-110 transition-all font-['Space_Grotesk']"
         onClick={() => setPage('home')}
       >
         {logoUrl ? (
@@ -210,26 +218,26 @@ const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Pa
             src={logoUrl} 
             alt="Logo" 
             referrerPolicy="no-referrer"
-            className="w-10 h-10 md:w-12 md:h-12 object-contain rounded-full border border-[#252D37] bg-[#12161B]" 
+            className="w-10 h-10 md:w-12 md:h-12 object-contain rounded-full border border-[#B7E36A]/30 bg-[#181E25]" 
           />
         ) : (
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#12161B] border border-[#252D37] animate-pulse flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#181E25] border border-[#B7E36A]/30 animate-pulse flex items-center justify-center shrink-0">
             <div className="w-5 h-5 rounded-full bg-white/10" />
           </div>
         )}
         ABU HANIF
       </motion.div>
       
-      <div className="hidden md:flex gap-10">
-        {(['home', 'projects', 'reviews', 'contact', 'about'] as Page[]).map((item) => (
+      <div className="hidden md:flex gap-10 font-['Space_Grotesk']">
+        {(['home', 'projects', 'services', 'reviews', 'contact', 'about'] as Page[]).map((item) => (
           <button
             key={item}
             onClick={() => setPage(item)}
-            className={`font-medium uppercase text-xs tracking-widest transition-colors duration-200 ${
-              currentPage === item ? 'text-[#4F8CFF]' : 'text-[#9CA8B8] hover:text-[#4F8CFF]'
+            className={`font-bold uppercase text-xs tracking-widest transition-colors duration-150 cursor-pointer ${
+              currentPage === item ? 'text-[#B7E36A]' : 'text-[#A9B1BB] hover:text-[#B7E36A]'
             }`}
           >
-            {item === 'projects' ? 'PORTFOLIO' : item.toUpperCase()}
+            {item === 'projects' ? 'PORTFOLIO' : item === 'services' ? 'SERVICES' : item.toUpperCase()}
           </button>
         ))}
       </div>
@@ -238,17 +246,17 @@ const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Pa
         <motion.button 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          whileHover={{ scale: 1.05, y: -3 }}
+          whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setPage('contact')}
-          className="hidden md:flex bg-[#4F8CFF] hover:bg-[#72A8FF] text-white px-8 py-3 h-[48px] items-center justify-center rounded-full font-bold text-xs uppercase tracking-widest transition-all duration-250 shadow-[0_10px_30px_rgba(79,140,255,0.15)]"
+          className="hidden md:flex bg-[#B7E36A] hover:bg-[#C8F27A] text-[#0B0F14] px-8 py-3 h-[48px] items-center justify-center rounded-full font-extrabold text-xs uppercase tracking-widest transition-all duration-150 shadow-[0_0_20px_rgba(183,227,106,0.3)] font-['Space_Grotesk'] cursor-pointer"
         >
           Hire Me
         </motion.button>
         
         <button 
           onClick={onOpenMenu}
-          className="p-3 bg-white/5 rounded-full text-white hover:bg-white/10 active:scale-90 transition-all duration-75 border border-[#252D37] touch-manipulation cursor-pointer flex items-center justify-center"
+          className="p-3 bg-white/5 rounded-full text-white hover:bg-white/10 active:scale-90 transition-all duration-75 border border-white/10 touch-manipulation cursor-pointer flex items-center justify-center"
         >
           <Menu size={20} />
         </button>
@@ -258,18 +266,19 @@ const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Pa
 };
 
 const MobileNav = ({ current, setPage }: { current: Page, setPage: (p: Page) => void }) => (
-  <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50 glass-card px-8 py-4 flex gap-8 shadow-2xl border-[#252D37] bg-[#171C22]/80 backdrop-blur-[20px]">
+  <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50 glass-card px-6 py-3.5 flex gap-6 shadow-2xl border-white/10 bg-[#10151C]/90 backdrop-blur-[20px] rounded-full">
     {[
       { id: 'home', icon: Play },
       { id: 'projects', icon: Grid },
+      { id: 'services', icon: Sparkles },
       { id: 'reviews', icon: Award },
-      { id: 'about', icon: User },
       { id: 'contact', icon: Mail },
+      { id: 'about', icon: User },
     ].map((item) => (
       <button 
         key={item.id} 
         onClick={() => setPage(item.id as Page)}
-        className={`p-2 rounded-full transition-all ${current === item.id ? 'bg-[#4F8CFF]/10 text-[#4F8CFF] scale-110' : 'text-[#697586]'}`}
+        className={`p-2 rounded-full transition-all ${current === item.id ? 'bg-[#B7E36A]/20 text-[#B7E36A] scale-110' : 'text-[#7E8793]'}`}
       >
         <item.icon size={18} />
       </button>
@@ -280,11 +289,10 @@ const MobileNav = ({ current, setPage }: { current: Page, setPage: (p: Page) => 
 // --- Sections ---
 
 const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void, aboutImage: string | null, setPage: (p: Page) => void, cvUrl?: string | null }) => (
-  <section className="flex flex-col pt-12 md:pt-16 pb-24 px-6 md:px-12 relative overflow-hidden bg-[#02040A] -mt-[35px]">
-    {/* Left-edge bright cyan-blue lens flare bleed */}
-    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-gradient-to-br from-[#0052FF]/20 to-[#00F0FF]/15 blur-[150px] rounded-full pointer-events-none opacity-80" />
-    {/* Subtle right glow behind viewfinder */}
-    <div className="absolute top-[20%] right-[-10%] w-[40%] h-[60%] bg-[#0052FF]/5 blur-[130px] rounded-full pointer-events-none" />
+  <section className="flex flex-col -mt-[10px] pt-12 md:pt-16 pb-16 md:pb-24 px-6 md:px-12 relative overflow-hidden bg-[#0B0F14]">
+    {/* Soft green lens flare glow */}
+    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-[rgba(183,227,106,0.12)] blur-[150px] rounded-full pointer-events-none" />
+    <div className="absolute top-[20%] right-[-10%] w-[40%] h-[60%] bg-[rgba(183,227,106,0.06)] blur-[130px] rounded-full pointer-events-none" />
     
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center max-w-7xl mx-auto w-full relative z-10">
       <motion.div
@@ -294,42 +302,42 @@ const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void
         className="lg:col-span-7 space-y-6 md:space-y-8"
       >
         {/* Main Header matching mockup exactly */}
-        <h1 className="tracking-tighter -letter-spacing-[0.03em] max-w-2xl flex flex-col gap-1">
-          <span className="text-2xl sm:text-3xl font-normal text-[#9CA8B8] block">
+        <h1 className="tracking-tighter -letter-spacing-[0.03em] max-w-2xl flex flex-col gap-1 font-['Space_Grotesk']">
+          <span className="text-2xl sm:text-3xl font-normal text-[#A9B1BB] block">
             I create
           </span>
-          <span className="text-5xl sm:text-7xl lg:text-[76px] lg:leading-[1.1] font-black text-transparent bg-clip-text bg-gradient-to-r from-[#0066FF] to-[#00E5FF] filter drop-shadow-[0_0_25px_rgba(0,102,255,0.35)] block">
+          <span className="text-5xl sm:text-7xl lg:text-[76px] lg:leading-[1.1] font-black text-transparent bg-clip-text bg-gradient-to-r from-[#B7E36A] to-[#C8F27A] filter drop-shadow-[0_0_25px_rgba(183,227,106,0.35)] block">
             Visualization
           </span>
         </h1>
         
-        <p className="text-[#9CA8B8] text-base md:text-lg max-w-xl leading-relaxed font-medium">
+        <p className="text-[#A9B1BB] text-base md:text-lg max-w-xl leading-relaxed font-medium font-['Inter']">
           I specialize in high-end video editing, color grading, and motion design for brands and creators.
         </p>
         
         {/* Dual Pill CTA Buttons matching mockup */}
-        <div className="flex flex-wrap gap-4 pt-4 items-center">
+        <div className="flex flex-wrap gap-4 pt-4 items-center font-['Space_Grotesk']">
           <motion.button 
             whileHover={{ 
               scale: 1.03, 
               y: -2,
-              boxShadow: "0 0 25px rgba(0, 82, 255, 0.45), inset 0 1px 3px rgba(255, 255, 255, 0.25)"
+              boxShadow: "0 0 25px rgba(183, 227, 106, 0.45)"
             }}
             whileTap={{ scale: 0.98 }}
             onClick={() => {
               setPage('projects');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="relative bg-[#060B15]/50 backdrop-blur-md text-[#A5C9FF] hover:text-white border border-[#0052FF]/40 hover:border-[#0084FF] px-8 py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2.5 transition-all duration-300 touch-manipulation cursor-pointer select-none shadow-[0_0_15px_rgba(0,82,255,0.2),inset_0_1px_1px_rgba(255,255,255,0.15)]"
+            className="relative bg-[#B7E36A] hover:bg-[#C8F27A] text-[#0B0F14] px-8 py-3.5 rounded-full font-extrabold text-sm flex items-center justify-center gap-2.5 transition-all duration-150 touch-manipulation cursor-pointer select-none shadow-[0_0_20px_rgba(183,227,106,0.3)]"
           >
-            <span>View My Work</span> <ArrowRight size={16} />
+            <span className="leading-none flex items-center">Visit Portfolio</span> <ArrowRight size={16} className="shrink-0" />
           </motion.button>
 
           <motion.button 
             whileHover={{ 
               scale: 1.03, 
               y: -2,
-              boxShadow: "0 0 25px rgba(0, 82, 255, 0.45), inset 0 1px 3px rgba(255, 255, 255, 0.25)"
+              boxShadow: "0 0 25px rgba(183, 227, 106, 0.25)"
             }}
             whileTap={{ scale: 0.98 }}
             onClick={() => {
@@ -347,10 +355,10 @@ const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void
                 document.body.removeChild(link);
               }
             }}
-            className="relative bg-[#060B15]/50 backdrop-blur-md text-[#A5C9FF] hover:text-white border border-[#0052FF]/40 hover:border-[#0084FF] px-8 py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2.5 transition-all duration-300 touch-manipulation cursor-pointer select-none shadow-[0_0_15px_rgba(0,82,255,0.2),inset_0_1px_1px_rgba(255,255,255,0.15)]"
+            className="relative bg-[#181E25] hover:bg-[#202732] text-[#F5F7FA] border border-[#B7E36A]/30 hover:border-[#B7E36A]/60 px-8 py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2.5 transition-all duration-150 touch-manipulation cursor-pointer select-none shadow-[0_0_15px_rgba(0,0,0,0.3)]"
           >
             <span>Download CV</span>
-            <svg className="w-4 h-4 text-[#A5C9FF]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-[#B7E36A]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
           </motion.button>
@@ -363,7 +371,7 @@ const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void
             { Icon: FaFacebook, link: "https://www.facebook.com/profile.php?id=61592538396121", color: "#1877F2" },
             { Icon: FaBehance, link: "https://www.behance.net/mdabuhanifsarker", color: "#0057FF" },
             { Icon: FaLinkedin, link: "https://www.linkedin.com/in/mdabuhanifsarker/", color: "#0077B5" },
-            { Icon: Mail, link: "mailto:mdabuhanifsarker91@gmail.com", color: "#0084FF" }
+            { Icon: Mail, link: "mailto:mdabuhanifsarker91@gmail.com", color: "#EA4335" }
           ].map((social, idx) => (
             <motion.a 
               key={idx}
@@ -378,7 +386,7 @@ const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void
                 backgroundColor: `${social.color}10`
               }}
               whileTap={{ scale: 0.95 }}
-              className="w-10 h-10 rounded-full flex items-center justify-center bg-[#070C15]/90 border transition-all shadow-md cursor-pointer"
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-[#070C15]/90 border transition-all duration-150 shadow-md cursor-pointer"
               style={{ 
                 borderColor: `${social.color}33`,
                 color: social.color 
@@ -399,23 +407,23 @@ const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void
       >
         <div className="relative w-72 h-72 sm:w-80 sm:h-80 md:w-[380px] md:h-[380px] flex items-center justify-center">
           {/* Concentric rotating orbit lines with nodes */}
-          <div className="absolute inset-0 rounded-full border border-[#0052FF]/15 animate-[spin_180s_linear_infinite] pointer-events-none" />
-          <div className="absolute inset-4 rounded-full border border-dashed border-[#00E5FF]/20 animate-[spin_90s_linear_infinite] pointer-events-none" />
+          <div className="absolute inset-0 rounded-full border border-[#B7E36A]/20 animate-[spin_180s_linear_infinite] pointer-events-none" />
+          <div className="absolute inset-4 rounded-full border border-dashed border-[#B7E36A]/30 animate-[spin_90s_linear_infinite] pointer-events-none" />
           
           {/* Inner glowing orbit */}
-          <div className="absolute inset-10 rounded-full border border-[#0084FF]/35 pointer-events-none animate-[pulse_6s_ease-in-out_infinite]" />
+          <div className="absolute inset-10 rounded-full border border-[#B7E36A]/40 pointer-events-none animate-[pulse_6s_ease-in-out_infinite]" />
           
           {/* Compass Orbit Dots (Top, Bottom, Left, Right nodes) */}
-          <div className="absolute top-10 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#00E5FF] rounded-full shadow-[0_0_10px_rgba(0,229,255,0.8)] z-20" />
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#00E5FF] rounded-full shadow-[0_0_10px_rgba(0,229,255,0.8)] z-20" />
-          <div className="absolute left-10 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#0052FF] rounded-full shadow-[0_0_10px_rgba(0,82,255,0.8)] z-20" />
-          <div className="absolute right-10 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#0052FF] rounded-full shadow-[0_0_10px_rgba(0,82,255,0.8)] z-20" />
+          <div className="absolute top-10 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#B7E36A] rounded-full shadow-[0_0_10px_rgba(183,227,106,0.8)] z-20" />
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#B7E36A] rounded-full shadow-[0_0_10px_rgba(183,227,106,0.8)] z-20" />
+          <div className="absolute left-10 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#B7E36A] rounded-full shadow-[0_0_10px_rgba(183,227,106,0.8)] z-20" />
+          <div className="absolute right-10 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#B7E36A] rounded-full shadow-[0_0_10px_rgba(183,227,106,0.8)] z-20" />
 
-          {/* Blue glowing backlight spot */}
-          <div className="absolute inset-12 rounded-full bg-gradient-to-tr from-[#0052FF]/10 to-[#00E5FF]/10 blur-3xl opacity-80 pointer-events-none" />
+          {/* Green glowing backlight spot */}
+          <div className="absolute inset-12 rounded-full bg-gradient-to-tr from-[#B7E36A]/15 to-[#C8F27A]/15 blur-3xl opacity-80 pointer-events-none" />
 
           {/* Concentric border and image mask */}
-          <div className="w-[72%] h-[72%] rounded-full p-1 bg-gradient-to-tr from-[#1E2B43] via-[#0C1220] to-[#0084FF]/40 relative z-10 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+          <div className="w-[72%] h-[72%] rounded-full p-1 bg-gradient-to-tr from-[#181E25] via-[#10151C] to-[#B7E36A]/40 relative z-10 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
             <div className="w-full h-full rounded-full overflow-hidden border border-[#1E2B43] relative bg-[#040814]">
               {aboutImage ? (
                 <img 
@@ -434,7 +442,7 @@ const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void
 
           {/* Handwriting/Signature text overlay at bottom middle point */}
           <div className="absolute bottom-[-24px] sm:bottom-[-32px] left-1/2 transform -translate-x-1/2 z-20 pointer-events-none select-none text-center whitespace-nowrap">
-            <span className="font-caveat text-5xl sm:text-6.5xl text-[#00E5FF] font-semibold tracking-wide drop-shadow-[0_3px_12px_rgba(0,229,255,0.7)]">
+            <span className="font-caveat text-5xl sm:text-6.5xl text-[#B7E36A] font-semibold tracking-wide drop-shadow-[0_3px_12px_rgba(183,227,106,0.8)]">
               Abu Hanif
             </span>
           </div>
@@ -748,13 +756,13 @@ const BestWorksSection = ({
   };
 
   return (
-    <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto space-y-12 -mt-[70px] -mb-[70px]">
+    <section className="py-16 md:py-24 px-6 md:px-12 max-w-7xl mx-auto space-y-12">
       <div className="flex justify-center text-center w-full relative">
-        <h2 className="text-4xl sm:text-6xl md:text-7xl font-bold text-white tracking-tight leading-none -letter-spacing-[0.03em]">
-          BEST <span className="text-[#4F8CFF]">WORKS</span>
+        <h2 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-[#F5F7FA] tracking-tight leading-none -letter-spacing-[0.03em] font-['Space_Grotesk']">
+          BEST <span className="text-[#B7E36A]">WORKS</span>
         </h2>
         {isAdmin && (
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-[#4F8CFF]/10 border border-[#4F8CFF]/20 text-[#4F8CFF] px-3 py-1.5 rounded-[14px] text-[10px] uppercase font-bold tracking-widest">
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-[#B7E36A]/10 border border-[#B7E36A]/20 text-[#B7E36A] px-3 py-1.5 rounded-[14px] text-[10px] uppercase font-bold tracking-widest font-['Space_Grotesk']">
             Admin Mode
           </div>
         )}
@@ -778,7 +786,7 @@ const BestWorksSection = ({
                 addNotification("No Video", "This project doesn't have an associated video yet.");
               }
             }}
-            className="bg-[#171C22] border border-[#252D37] aspect-video relative group overflow-hidden cursor-pointer rounded-[22px] hover:border-[#4F8CFF]/30 active:scale-95 transition-all duration-300 shadow-[0_20px_60px_rgba(0,0,0,0.35)]"
+            className="bg-[#181E25] border border-[#B7E36A]/20 aspect-video relative group overflow-hidden cursor-pointer rounded-[22px] hover:border-[#B7E36A]/40 active:scale-95 transition-all duration-150 shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
           >
             {isAdmin && (
               <button
@@ -795,7 +803,7 @@ const BestWorksSection = ({
                   setTargetSlotIndex(idx);
                   setShowManager(true);
                 }}
-                className="absolute top-4 right-4 z-20 bg-[#4F8CFF] hover:bg-[#72A8FF] text-white p-3 rounded-full transition-all flex items-center justify-center shadow-lg hover:scale-105 active:scale-90"
+                className="absolute top-4 right-4 z-20 bg-[#B7E36A] hover:bg-[#C8F27A] text-[#0B0F14] p-3 rounded-full transition-all duration-150 flex items-center justify-center shadow-lg hover:scale-105 active:scale-90"
                 title="Edit featured video slot"
               >
                 <Settings size={16} />
@@ -804,23 +812,23 @@ const BestWorksSection = ({
 
             <img 
               src={getProjectThumbnail(project)} 
-              className="absolute inset-0 w-full h-full object-cover opacity-65 group-hover:opacity-100 transition-all duration-700" 
+              className="absolute inset-0 w-full h-full object-cover opacity-65 group-hover:opacity-100 transition-all duration-500" 
               alt={project.title} 
               referrerPolicy="no-referrer"
             />
             
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-85 group-hover:opacity-40 transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-85 group-hover:opacity-40 transition-opacity duration-300" />
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
 
             <div className="absolute bottom-6 left-6 right-6 z-10 flex flex-col gap-2">
-              <span className="text-[10px] font-bold text-[#4F8CFF] uppercase tracking-widest bg-[#4F8CFF]/10 border border-[#4F8CFF]/20 rounded-full px-3 py-1 w-fit">
+              <span className="text-[10px] font-bold text-[#B7E36A] uppercase tracking-widest bg-[#B7E36A]/10 border border-[#B7E36A]/20 rounded-full px-3 py-1 w-fit font-['Space_Grotesk']">
                 {project.category}
               </span>
-              <h3 className="text-xl md:text-2xl font-bold text-[#F5F7FA] tracking-tight leading-snug">{project.title}</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-[#F5F7FA] tracking-tight leading-snug font-['Space_Grotesk']">{project.title}</h3>
             </div>
 
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-              <div className="w-14 h-14 bg-[#4F8CFF]/10 backdrop-blur-2xl rounded-full flex items-center justify-center text-[#4F8CFF] border border-[#4F8CFF]/40 shadow-2xl shadow-[#4F8CFF]/20">
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="w-14 h-14 bg-[#B7E36A]/15 backdrop-blur-2xl rounded-full flex items-center justify-center text-[#B7E36A] border border-[#B7E36A]/40 shadow-2xl shadow-[#B7E36A]/20">
                 <Play fill="currentColor" size={20} className="ml-1" />
               </div>
             </div>
@@ -828,21 +836,21 @@ const BestWorksSection = ({
         ))}
       </div>
 
-      <div className="flex justify-center pt-4">
+      <div className="flex justify-center pt-4 font-['Space_Grotesk']">
         <motion.button 
           whileHover={{ 
             scale: 1.03, 
-            y: -3,
-            boxShadow: "0 0 25px rgba(0, 82, 255, 0.45), inset 0 1px 3px rgba(255, 255, 255, 0.25)"
+            y: -2,
+            boxShadow: "0 0 25px rgba(183, 227, 106, 0.45)"
           }}
           whileTap={{ scale: 0.97 }}
           onClick={() => {
             setPage('projects');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          className="relative bg-[#060B15]/50 backdrop-blur-md text-[#A5C9FF] hover:text-white border border-[#0052FF]/40 hover:border-[#0084FF] px-10 py-3.5 h-[48px] rounded-full font-bold text-xs uppercase tracking-widest transition-all duration-250 flex items-center justify-center gap-3 w-full sm:w-auto touch-manipulation cursor-pointer shadow-[0_0_15px_rgba(0,82,255,0.2),inset_0_1px_1px_rgba(255,255,255,0.15)]"
+          className="relative bg-[#B7E36A] hover:bg-[#C8F27A] text-[#0B0F14] px-10 py-3.5 h-[48px] rounded-full font-extrabold text-xs uppercase tracking-widest transition-all duration-150 flex items-center justify-center gap-2.5 w-full sm:w-auto touch-manipulation cursor-pointer shadow-[0_0_20px_rgba(183,227,106,0.3)] -mt-[52px]"
         >
-          <span>Visit Portfolio</span> <ArrowRight size={16} />
+          <span className="leading-none flex items-center">View My Work</span> <ArrowRight size={16} className="shrink-0" />
         </motion.button>
       </div>
 
@@ -1101,6 +1109,124 @@ const BestWorksSection = ({
   );
 };
 
+const ReviewFormCard = ({
+  selectedRating,
+  setSelectedRating,
+  onSubmitReview,
+  addNotification,
+  formId = "review-form"
+}: {
+  selectedRating: number;
+  setSelectedRating: (r: number) => void;
+  onSubmitReview: (rating: number | null, opinion: string, email: string) => Promise<boolean>;
+  addNotification: (title: string, message: string) => void;
+  formId?: string;
+}) => {
+  return (
+    <div className="w-full max-w-2xl mx-auto bg-[#181E25] border border-[#B7E36A]/20 p-6 sm:p-10 rounded-2xl sm:rounded-3xl space-y-8 shadow-[0_0_35px_rgba(183,227,106,0.12)] relative overflow-hidden font-['Inter']">
+      {/* Soft Glow Accent */}
+      <div className="absolute -top-12 -right-12 w-40 h-40 bg-[#B7E36A]/10 blur-3xl rounded-full pointer-events-none" />
+      
+      <div className="text-center space-y-3 relative z-10">
+        <h3 className="text-xl sm:text-2xl font-bold text-[#F5F7FA] uppercase tracking-wider font-['Space_Grotesk']">
+          LEAVE A RATING
+        </h3>
+        <div className="flex justify-center gap-2 pt-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button 
+              type="button"
+              key={star}
+              onClick={() => {
+                const form = document.getElementById(formId) as HTMLFormElement;
+                if (form) {
+                  form.dataset.rating = star.toString();
+                  setSelectedRating(star);
+                }
+              }}
+              className="p-1 transition-all duration-200 hover:scale-125 active:scale-95 cursor-pointer text-[#B7E36A]"
+              title={`Rate ${star} star${star > 1 ? 's' : ''}`}
+            >
+              <Star 
+                size={32} 
+                className="text-[#B7E36A]" 
+                fill={selectedRating >= star ? "#B7E36A" : "none"} 
+                strokeWidth={selectedRating >= star ? 0 : 1.8}
+              />
+            </button>
+          ))}
+        </div>
+        <p className="text-[10px] font-bold text-[#A9B1BB] uppercase tracking-[0.2em] font-['Inter']">
+          TAP A STAR TO RATE
+        </p>
+      </div>
+
+      <form 
+        id={formId}
+        className="space-y-6 relative z-10"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.currentTarget);
+          const emailVal = (formData.get('userEmail') as string || "").trim();
+          const opinionVal = (formData.get('userComment') as string || "").trim();
+          
+          if (selectedRating === 0 && opinionVal === "") {
+            alert("Please select a rating, write an opinion, or both!");
+            return;
+          }
+          
+          const success = await onSubmitReview(selectedRating, opinionVal, emailVal);
+          if (success) {
+            addNotification("Review Posted", "Thank you for your valuable feedback!");
+            setSelectedRating(0);
+            (e.target as HTMLFormElement).reset();
+          }
+        }}
+      >
+        <div className="space-y-2">
+          <label className="block text-[10px] font-bold text-[#A9B1BB] uppercase tracking-[0.2em] font-['Inter']">
+            YOUR EMAIL (OPTIONAL)
+          </label>
+          <div className="relative flex items-center">
+            <Mail size={18} className="absolute left-4 text-[#B7E36A] pointer-events-none" />
+            <input 
+              type="email" 
+              name="userEmail" 
+              className="w-full bg-[#10151C] border border-white/10 focus:border-[#B7E36A] rounded-xl pl-11 pr-4 py-3.5 text-[#F5F7FA] text-sm focus:outline-none transition-all font-normal placeholder:text-[#697586] focus:shadow-[0_0_15px_rgba(183,227,106,0.15)] font-['Inter']" 
+              placeholder="name@example.com" 
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-[10px] font-bold text-[#A9B1BB] uppercase tracking-[0.2em] font-['Inter']">
+            YOUR REVIEW
+          </label>
+          <div className="relative flex items-start">
+            <Edit3 size={18} className="absolute left-4 top-4 text-[#B7E36A] pointer-events-none" />
+            <textarea 
+              name="userComment" 
+              rows={4} 
+              className="w-full bg-[#10151C] border border-white/10 focus:border-[#B7E36A] rounded-xl pl-11 pr-4 py-3.5 text-[#F5F7FA] text-sm focus:outline-none transition-all font-normal resize-none placeholder:text-[#697586] focus:shadow-[0_0_15px_rgba(183,227,106,0.15)] font-['Inter']" 
+              placeholder="How was your experience working with me?" 
+            />
+          </div>
+        </div>
+
+        <div>
+          <motion.button 
+            whileHover={{ scale: 1.015, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            type="submit"
+            className="w-full py-4 bg-[#B7E36A] hover:bg-[#C8F27A] text-[#0B0F14] font-extrabold text-xs uppercase tracking-widest rounded-full sm:rounded-2xl transition-all duration-150 shadow-[0_0_25px_rgba(183,227,106,0.3)] font-['Space_Grotesk'] cursor-pointer flex items-center justify-center gap-2"
+          >
+            POST MY REVIEW
+          </motion.button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
 const ReviewList = ({ reviews }: { reviews: Review[] }) => {
   const [showAll, setShowAll] = useState(false);
 
@@ -1116,28 +1242,29 @@ const ReviewList = ({ reviews }: { reviews: Review[] }) => {
   const reviewsWithRating = sortedReviews.filter(r => r.rating !== null && r.rating !== undefined && r.rating !== 0);
   const averageScoreVal = reviewsWithRating.length > 0
     ? (reviewsWithRating.reduce((sum, r) => sum + Number(r.rating), 0) / reviewsWithRating.length).toFixed(1)
-    : "0.0";
+    : "5.0";
 
   const displayedReviews = showAll ? sortedReviews : sortedReviews.slice(0, 2);
 
   return (
-    <div className="space-y-12 w-full max-w-4xl mx-auto pt-4">
-      <div id="community-voice-heading" className="flex items-center justify-between border-b border-[#252D37] pb-8 scroll-mt-28">
-        <h3 className="text-2xl font-bold text-[#F5F7FA] uppercase tracking-tight flex items-center gap-3">
-          Community Voice <span className="text-[#4F8CFF] text-lg font-bold">({sortedReviews.length})</span>
+    <div className="space-y-8 w-full max-w-2xl mx-auto pt-4 font-['Inter']">
+      {/* Community Voice Header */}
+      <div id="community-voice-heading" className="flex items-center justify-between border-b border-white/10 pb-6 scroll-mt-28">
+        <h3 className="text-xl sm:text-2xl font-bold text-[#F5F7FA] uppercase tracking-wider font-['Space_Grotesk'] flex items-center gap-2">
+          COMMUNITY VOICE <span className="text-[#B7E36A]">({sortedReviews.length})</span>
         </h3>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <div className="text-[#4F8CFF] font-bold text-xl">{averageScoreVal}</div>
-            <div className="text-[9px] font-bold text-[#697586] uppercase tracking-widest">Average Score</div>
-          </div>
+        <div className="text-right">
+          <div className="text-[#B7E36A] font-extrabold text-2xl font-['Space_Grotesk'] leading-none">{averageScoreVal}</div>
+          <div className="text-[10px] font-bold text-[#A9B1BB] uppercase tracking-[0.2em] font-['Inter'] mt-1">AVERAGE RATING</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8">
+      <div className="grid grid-cols-1 gap-6">
         <AnimatePresence mode="popLayout">
           {displayedReviews.map((rev, idx) => {
             const firstChar = rev.email ? rev.email.charAt(0) : (rev.name ? rev.name.charAt(0) : "A");
+            const displayName = rev.email ? rev.email.split('@')[0] : (rev.name || "Anonymous Client");
+
             return (
               <motion.div 
                 layout
@@ -1146,39 +1273,42 @@ const ReviewList = ({ reviews }: { reviews: Review[] }) => {
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.25, delay: idx * 0.04, ease: "easeOut" }}
                 key={rev.id} 
-                className="bg-[#171C22] border border-[#252D37] p-8 md:p-10 rounded-[22px] space-y-6 group hover:border-[#4F8CFF]/20 transition-all duration-300 shadow-[0_15px_45px_rgba(0,0,0,0.15)]"
+                className="bg-[#181E25] border border-[#B7E36A]/20 hover:border-[#B7E36A]/40 p-6 sm:p-8 rounded-2xl space-y-5 transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.25)] group relative overflow-hidden"
               >
-                <div className="flex justify-between items-start">
-                  <div className="flex gap-4 items-center min-w-0">
-                    <div className="w-12 h-12 bg-[#4F8CFF]/10 rounded-[14px] flex items-center justify-center text-[#4F8CFF] font-bold text-lg border border-[#4F8CFF]/20 uppercase shrink-0">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex gap-3.5 items-center min-w-0">
+                    <div className="w-11 h-11 bg-[#10151C] border border-[#B7E36A]/30 text-[#B7E36A] font-extrabold text-lg font-['Space_Grotesk'] rounded-xl flex items-center justify-center uppercase shrink-0">
                       {firstChar}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[#F5F7FA] font-bold text-base tracking-tight uppercase truncate">
-                        {rev.email ? rev.email.split('@')[0] : (rev.name || "Anonymous Client")}
+                      <p className="text-[#F5F7FA] font-bold text-sm sm:text-base tracking-wide uppercase truncate font-['Space_Grotesk']">
+                        {displayName}
                       </p>
                       {rev.email && (
-                        <p className="text-[#697586] text-[10px] font-bold uppercase tracking-widest truncate">
+                        <p className="text-[#A9B1BB] text-xs font-normal truncate font-['Inter']">
                           {rev.email}
                         </p>
                       )}
                     </div>
                   </div>
+
                   {rev.rating !== null && rev.rating !== undefined && rev.rating !== 0 && (
-                    <div className="flex items-center gap-1.5 bg-[#4F8CFF]/10 px-3 py-1.5 rounded-full text-[#4F8CFF] shrink-0">
-                      <Star size={12} fill="currentColor" />
-                      <span className="font-bold text-xs">{rev.rating}.0</span>
+                    <div className="flex items-center gap-1.5 bg-[#B7E36A]/10 border border-[#B7E36A]/30 px-3 py-1 rounded-full text-[#B7E36A] shrink-0 font-['Space_Grotesk']">
+                      <Star size={13} fill="#B7E36A" className="text-[#B7E36A]" />
+                      <span className="font-extrabold text-xs">{rev.rating}.0</span>
                     </div>
                   )}
                 </div>
+
                 {rev.comment && rev.comment.trim() !== "" && (
-                  <div className="relative text-slate-300 font-normal leading-relaxed italic text-base border-l-2 border-[#4F8CFF]/20 pl-6 py-1 break-words">
+                  <div className="relative text-[#F5F7FA] font-normal leading-relaxed italic text-sm sm:text-base border-l-2 border-[#B7E36A]/40 pl-4 py-1 break-words font-['Inter']">
                     "{rev.comment}"
                   </div>
                 )}
-                <div className="flex justify-between items-center text-[9px] font-bold text-[#697586] uppercase tracking-[0.2em] pt-4 border-t border-[#252D37]">
-                  <span>Verified Experience</span>
-                  <span>{rev.date}</span>
+
+                <div className="flex justify-between items-center text-[10px] font-bold tracking-[0.2em] uppercase pt-4 border-t border-white/5 font-['Inter']">
+                  <span className="text-[#B7E36A]">VERIFIED CUSTOMER</span>
+                  <span className="text-[#A9B1BB]">{rev.date}</span>
                 </div>
               </motion.div>
             );
@@ -1186,14 +1316,15 @@ const ReviewList = ({ reviews }: { reviews: Review[] }) => {
         </AnimatePresence>
         
         {sortedReviews.length === 0 && (
-          <div className="py-20 text-center glass-card border-dashed border-white/10 rounded-[3rem]">
-            <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-xs">No reviews yet. Be the first to share your experience!</p>
+          <div className="py-16 text-center bg-[#181E25] border border-dashed border-white/10 rounded-2xl">
+            <p className="text-[#A9B1BB] font-bold uppercase tracking-[0.2em] text-xs font-['Inter']">No reviews yet. Be the first to share your experience!</p>
           </div>
         )}
 
         {sortedReviews.length > 2 && (
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-2">
             <button
+              type="button"
               onClick={() => {
                 if (showAll) {
                   setShowAll(false);
@@ -1205,10 +1336,10 @@ const ReviewList = ({ reviews }: { reviews: Review[] }) => {
                   setShowAll(true);
                 }
               }}
-              className="px-6 py-2.5 bg-[#252D37] hover:bg-[#4F8CFF] text-[#F5F7FA] font-bold text-xs uppercase tracking-widest rounded-full transition-all duration-300 shadow-md cursor-pointer flex items-center gap-2 border border-white/5 hover:border-transparent active:scale-95"
+              className="px-8 py-3 bg-[#10151C] hover:bg-[#181E25] border border-[#B7E36A]/30 hover:border-[#B7E36A] text-[#F5F7FA] hover:text-[#B7E36A] font-bold text-xs uppercase tracking-widest rounded-full transition-all duration-150 shadow-md cursor-pointer flex items-center gap-2 font-['Space_Grotesk'] active:scale-95"
             >
-              <span>{showAll ? 'Show Less' : 'Show More'}</span>
-              {showAll ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              <span>{showAll ? 'SHOW LESS' : 'SHOW MORE'}</span>
+              {showAll ? <ChevronUp size={16} className="text-[#B7E36A]" /> : <ChevronDown size={16} className="text-[#B7E36A]" />}
             </button>
           </div>
         )}
@@ -1235,92 +1366,21 @@ const ReviewsSection = ({
   showReviewList?: boolean
 }) => {
   return (
-    <section className="py-16 md:py-24 px-6 md:px-12 max-w-7xl mx-auto space-y-16">
+    <section className="py-16 md:py-24 px-6 md:px-12 max-w-7xl mx-auto space-y-12">
       <header className="text-center">
-        <h2 className="text-4xl sm:text-6xl md:text-7xl font-bold text-white tracking-tight leading-none -letter-spacing-[0.03em]">
-          REVIEW <span className="text-[#4F8CFF]">ME</span>
+        <h2 className="text-4xl sm:text-6xl md:text-7xl font-bold text-white tracking-tight leading-none font-['Space_Grotesk']">
+          REVIEW <span className="text-[#B7E36A]">ME</span>
         </h2>
       </header>
 
       <div className="flex justify-center w-full">
-        {/* Submit review form centered */}
-        <div className="w-full max-w-xl bg-[#171C22] border border-[#252D37] p-8 md:p-10 rounded-[22px] space-y-8 shadow-[0_20px_60px_rgba(0,0,0,0.25)] relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#4F8CFF]/5 blur-3xl rounded-full pointer-events-none" />
-          
-          <div className="text-center space-y-4 relative z-10">
-            <h3 className="text-xl md:text-2xl font-bold text-white uppercase tracking-tight">Leave a Rating</h3>
-            <div className="flex justify-center gap-1.5">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button 
-                  key={star}
-                  onClick={() => {
-                    const form = document.getElementById('home-review-form') as HTMLFormElement;
-                    if (form) {
-                      form.dataset.rating = star.toString();
-                      setSelectedRating(star);
-                    }
-                  }}
-                  className={`p-1 transition-all hover:scale-125 active:scale-95 cursor-pointer ${selectedRating >= star ? 'text-[#4F8CFF]' : 'text-slate-700 hover:text-slate-500'}`}
-                >
-                  <Star size={30} fill={selectedRating >= star ? "currentColor" : "none"} />
-                </button>
-              ))}
-            </div>
-            <p className="text-[10px] font-bold text-[#697586] uppercase tracking-widest italic">Pick your score</p>
-          </div>
-
-          <form 
-            id="home-review-form"
-            className="grid grid-cols-1 gap-6 relative z-10"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const emailVal = (formData.get('userEmail') as string || "").trim();
-              const opinionVal = (formData.get('userComment') as string || "").trim();
-              
-              if (selectedRating === 0 && opinionVal === "") {
-                alert("Please select a rating, write an opinion, or both!");
-                return;
-              }
-              
-              const success = await onSubmitReview(selectedRating, opinionVal, emailVal);
-              if (success) {
-                addNotification("Review Posted", "Thank you for your valuable feedback!");
-                setSelectedRating(0);
-                (e.target as HTMLFormElement).reset();
-              }
-            }}
-          >
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[#9CA8B8] uppercase tracking-widest">Your Email (Optional)</label>
-              <input 
-                type="email" 
-                name="userEmail" 
-                className="w-full bg-[#11161C] border border-[#252D37] rounded-[14px] px-4 py-3 text-white text-sm focus:outline-none focus:border-[#4F8CFF] transition-all font-medium placeholder:text-slate-600 focus:shadow-[0_0_15px_rgba(79,140,255,0.15)]" 
-                placeholder="alex@example.com" 
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[#9CA8B8] uppercase tracking-widest">Your Opinion</label>
-              <textarea 
-                name="userComment" 
-                rows={4} 
-                className="w-full bg-[#11161C] border border-[#252D37] rounded-[14px] p-4 text-white text-sm focus:outline-none focus:border-[#4F8CFF] transition-all font-medium resize-none placeholder:text-slate-600 focus:shadow-[0_0_15px_rgba(79,140,255,0.15)]" 
-                placeholder="How was your experience working with me?" 
-              />
-            </div>
-            <div>
-              <motion.button 
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                className="w-full py-4 bg-[#4F8CFF] hover:bg-[#72A8FF] text-white rounded-full font-bold uppercase text-xs tracking-widest shadow-[0_10px_30px_rgba(79,140,255,0.15)] transition-all cursor-pointer"
-              >
-                Post My Review
-              </motion.button>
-            </div>
-          </form>
-        </div>
+        <ReviewFormCard 
+          selectedRating={selectedRating}
+          setSelectedRating={setSelectedRating}
+          onSubmitReview={onSubmitReview}
+          addNotification={addNotification}
+          formId="home-review-form"
+        />
       </div>
 
       {showReviewList && <ReviewList reviews={reviews} />}
@@ -1328,13 +1388,259 @@ const ReviewsSection = ({
   );
 };
 
+export interface ServicePackage {
+  id: string;
+  name: string;
+  badge?: string;
+  iconType: 'basic' | 'standard' | 'pro';
+  description: string;
+  price: string;
+  unit: string;
+  features: string[];
+  isPopular?: boolean;
+  buttonLabel?: string;
+}
+
+export const SERVICES_DATA: ServicePackage[] = [
+  {
+    id: 'basic',
+    name: 'BASIC',
+    iconType: 'basic',
+    description: 'Perfect for simple projects and personal content.',
+    price: '৳4,999',
+    unit: '/ Project',
+    features: [
+      'Up to 5 Minutes Editing',
+      'Basic Transitions',
+      'Color Correction',
+      'Background Music',
+      '720p Export',
+      '2 Revisions'
+    ],
+    isPopular: false,
+    buttonLabel: 'Get Started'
+  },
+  {
+    id: 'standard',
+    name: 'STANDARD',
+    badge: 'MOST POPULAR',
+    iconType: 'standard',
+    description: 'Great for YouTube videos, vlogs and business content.',
+    price: '৳8,999',
+    unit: '/ Project',
+    features: [
+      'Up to 15 Minutes Editing',
+      'Smooth Transitions',
+      'Color Grading',
+      'Background Music',
+      '1080p Export',
+      '3 Revisions',
+      'Thumbnail Design'
+    ],
+    isPopular: true,
+    buttonLabel: 'Get Started'
+  },
+  {
+    id: 'pro',
+    name: 'PRO',
+    iconType: 'pro',
+    description: 'For advanced content, ads, and commercial projects.',
+    price: '৳14,999',
+    unit: '/ Project',
+    features: [
+      'Up to 30 Minutes Editing',
+      'Cinematic Transitions',
+      'Advanced Color Grading',
+      'Sound Design',
+      '4K Export',
+      'Unlimited Revisions',
+      'Thumbnail + Motion Graphics',
+      'Priority Support'
+    ],
+    isPopular: false,
+    buttonLabel: 'Get Started'
+  }
+];
+
+const ServicesSection = ({
+  onSelectPackage,
+  selectedPackage,
+  isHomepagePreview = false,
+  setPage,
+  servicesData = SERVICES_DATA
+}: {
+  onSelectPackage: (pkgName: string) => void;
+  selectedPackage?: string | null;
+  isHomepagePreview?: boolean;
+  setPage?: (p: Page) => void;
+  servicesData?: ServicePackage[];
+}) => {
+  return (
+    <section className={`py-12 md:py-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto ${isHomepagePreview ? 'space-y-6 sm:space-y-8' : 'space-y-12'}`}>
+      {/* Header */}
+      {isHomepagePreview ? (
+        <div className="flex justify-center text-center w-full relative">
+          <h2 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-[#F5F7FA] tracking-tight leading-none font-['Space_Grotesk']">
+            MY <span className="text-[#B7E36A]">SERVICES</span>
+          </h2>
+        </div>
+      ) : (
+        <div className="text-center space-y-4 max-w-3xl mx-auto">
+          <div className="flex items-center justify-center gap-2 text-[#B7E36A] text-xs font-bold uppercase tracking-[0.25em] font-['Space_Grotesk']">
+            <span>MY SERVICES</span>
+          </div>
+
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-[#F5F7FA] tracking-tight leading-tight font-['Space_Grotesk']">
+            Choose The <span className="text-[#B7E36A]">Perfect Plan</span>
+          </h2>
+
+          <p className="text-[#A9B1BB] text-sm sm:text-base leading-relaxed font-['Inter'] max-w-2xl mx-auto">
+            I offer professional video editing services tailored to your needs.<br className="hidden sm:inline" />
+            Pick the perfect plan and let's bring your vision to life.
+          </p>
+
+          {/* Diamond sparkle accent */}
+          <div className="flex justify-center pt-2">
+            <div className="w-2.5 h-2.5 rotate-45 border border-[#B7E36A] bg-[#B7E36A]/20 shadow-[0_0_12px_#B7E36A]" />
+          </div>
+        </div>
+      )}
+
+      {/* Cards Container: STRICT SINGLE HORIZONTAL ROW ON ALL SCREENS */}
+      <div className="flex flex-row overflow-x-auto pb-8 pt-6 gap-6 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-[#B7E36A]/20 scrollbar-track-transparent w-full">
+        {servicesData.map((pkg) => {
+          const isStandard = pkg.isPopular;
+          const isSelected = selectedPackage
+            ? (selectedPackage.toLowerCase() === pkg.name.toLowerCase() || selectedPackage.toLowerCase() === pkg.id.toLowerCase())
+            : false;
+
+          return (
+            <div
+              key={pkg.id}
+              className={`min-w-[285px] sm:min-w-[320px] md:min-w-0 md:flex-1 shrink-0 snap-center rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative transition-all duration-300 font-['Inter'] ${
+                isSelected
+                  ? 'bg-[#181E25] border-2 border-[#B7E36A] shadow-[0_0_35px_rgba(183,227,106,0.35)] ring-2 ring-[#B7E36A]/60 z-20 scale-[1.02]'
+                  : isStandard
+                  ? 'bg-[#181E25] border-2 border-[#B7E36A]/70 shadow-[0_0_25px_rgba(183,227,106,0.15)] z-10'
+                  : 'bg-[#10151C] border border-white/10 hover:border-[#B7E36A]/30'
+              }`}
+            >
+              {/* Most Popular Badge */}
+              {isStandard && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#B7E36A] text-[#0B0F14] text-[11px] font-extrabold tracking-[0.2em] uppercase px-4 py-1 rounded-full shadow-[0_4px_15px_rgba(183,227,106,0.4)] font-['Space_Grotesk'] whitespace-nowrap">
+                  {pkg.badge || 'MOST POPULAR'}
+                </div>
+              )}
+
+              <div className="space-y-6">
+                {/* Title & Icon */}
+                <div className="text-center space-y-3">
+                  <h3 className="text-[#B7E36A] font-bold text-sm tracking-[0.25em] uppercase font-['Space_Grotesk']">
+                    {pkg.name}
+                  </h3>
+
+                  <div className="w-12 h-12 rounded-xl bg-[#181E25] border border-white/10 flex items-center justify-center text-[#B7E36A] mx-auto shadow-inner">
+                    {pkg.iconType === 'basic' && <Box size={22} />}
+                    {pkg.iconType === 'standard' && <Star size={22} fill="currentColor" />}
+                    {pkg.iconType === 'pro' && <Rocket size={22} />}
+                  </div>
+
+                  <p className="text-[#A9B1BB] text-xs leading-relaxed max-w-[220px] mx-auto min-h-[36px]">
+                    {pkg.description}
+                  </p>
+                </div>
+
+                <div className="border-t border-white/10" />
+
+                {/* Price */}
+                <div className="text-center space-y-1">
+                  <div className="text-3xl sm:text-4xl font-extrabold text-[#F5F7FA] font-['Space_Grotesk'] tracking-tight">
+                    {pkg.price}
+                  </div>
+                  <div className="text-[#A9B1BB] text-xs font-medium">
+                    {pkg.unit}
+                  </div>
+                </div>
+
+                {/* Feature List */}
+                <ul className="space-y-3 pt-2">
+                  {pkg.features.map((feat, idx) => (
+                    <li key={idx} className="flex items-start gap-2.5 text-xs text-[#F5F7FA]">
+                      <div className="w-4 h-4 rounded bg-[#B7E36A]/15 border border-[#B7E36A]/30 flex items-center justify-center text-[#B7E36A] shrink-0 mt-0.5">
+                        <Check size={11} strokeWidth={3} />
+                      </div>
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Get Started Button */}
+              <div className="pt-8">
+                <button
+                  onClick={() => onSelectPackage(pkg.name)}
+                  className={`w-full py-3.5 px-5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer font-['Space_Grotesk'] ${
+                    isSelected || isStandard
+                      ? 'bg-[#B7E36A] hover:bg-[#C8F27A] text-[#0B0F14] shadow-[0_8px_25px_rgba(183,227,106,0.3)]'
+                      : 'bg-[#181E25] hover:bg-[#B7E36A] text-[#F5F7FA] hover:text-[#0B0F14] border border-white/10 hover:border-transparent'
+                  }`}
+                >
+                  <span>{pkg.buttonLabel || 'Get Started'}</span>
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Bottom Custom Offer Banner matching reference image on all views */}
+      <div className={`bg-[#10151C] border border-white/10 rounded-2xl ${isHomepagePreview ? 'p-4 sm:p-5 mt-1' : 'p-5 sm:p-7'} flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 shadow-[0_15px_40px_rgba(0,0,0,0.4)]`}>
+        <div className="flex items-center gap-4 text-center sm:text-left">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#181E25] border border-white/10 flex items-center justify-center text-[#B7E36A] shrink-0 shadow-inner">
+            <Headphones size={22} />
+          </div>
+          <div>
+            <h4 className="text-[#F5F7FA] font-bold text-base font-['Space_Grotesk']">
+              Need something custom?
+            </h4>
+            <p className="text-[#A9B1BB] text-xs sm:text-sm font-['Inter'] mt-0.5">
+              Contact me for a personalized offer tailored to your project.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => onSelectPackage('Custom')}
+          className="px-6 py-3.5 bg-[#181E25] hover:bg-[#B7E36A] text-[#F5F7FA] hover:text-[#0B0F14] border border-white/10 hover:border-transparent rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-150 flex items-center gap-2 shrink-0 cursor-pointer font-['Space_Grotesk'] shadow-sm"
+        >
+          <span>Contact Me</span>
+          <ChevronRight size={16} />
+        </button>
+      </div>
+    </section>
+  );
+};
+
 const ContactSection = ({ 
   handleEmailSubmit,
-  isSending = false
+  isSending = false,
+  selectedPackage,
+  setSelectedPackage
 }: { 
   handleEmailSubmit: (e: React.FormEvent<HTMLFormElement>) => void,
-  isSending?: boolean
+  isSending?: boolean,
+  selectedPackage?: string | null,
+  setSelectedPackage?: (pkg: string | null) => void
 }) => {
+  const [subjectValue, setSubjectValue] = useState(selectedPackage ? `Service: ${selectedPackage} Package` : '');
+
+  useEffect(() => {
+    if (selectedPackage) {
+      setSubjectValue(`Service: ${selectedPackage} Package`);
+    }
+  }, [selectedPackage]);
+
   const handleEmailClick = (e: React.MouseEvent) => {
     e.preventDefault();
     const nameInput = document.getElementById('contact-name');
@@ -1345,68 +1651,41 @@ const ContactSection = ({
   };
 
   return (
-    <section className="py-16 md:py-24 px-6 md:px-12 max-w-7xl mx-auto space-y-12">
-      <header className="text-center">
-        <h2 className="text-4xl sm:text-6xl md:text-7xl font-bold text-white tracking-tight leading-none -letter-spacing-[0.03em]">
-          CONTACT <span className="text-[#4F8CFF]">ME</span>
-        </h2>
-      </header>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+    <section className="py-12 md:py-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto bg-[#0B0F14] rounded-3xl border border-white/5 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
         
-        {/* Left Side: Contact Info & Let's talk with gorgeous orbit animation */}
-        <div className="bg-[#0C1220] border border-[#1E2B43] p-8 sm:p-10 md:p-12 rounded-[24px] flex flex-col justify-between space-y-10 shadow-[0_20px_60px_rgba(0,0,0,0.55)] relative overflow-hidden">
-          {/* Subtle blue accent blur backing */}
-          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#0052FF]/10 blur-[50px] rounded-full pointer-events-none" />
+        {/* Left Column: Headline, Description, Contact Cards & Socials */}
+        <div className="lg:col-span-5 space-y-8 pl-2 sm:pl-4">
           
-          <div className="space-y-4 relative z-10">
-            <h2 className="text-3xl sm:text-4xl md:text-[42px] font-black text-white tracking-tight leading-none">
-              Let's talk <span className="text-[#0084FF] inline-block animate-pulse font-sans">.</span>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-[#B7E36A] text-xs font-bold uppercase tracking-[0.2em] font-['Space_Grotesk']">
+              <span>LET'S CONNECT</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#B7E36A] shadow-[0_0_10px_#B7E36A] inline-block animate-pulse" />
+            </div>
+
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#F5F7FA] tracking-tight leading-[1.08] font-['Space_Grotesk']">
+              Let's Work
+              <span className="text-[#B7E36A] block mt-1">Together</span>
             </h2>
-            <p className="text-[#9CA8B8] text-sm sm:text-base font-medium leading-relaxed max-w-xs">
-              I'm just glad to be your editor ! Thanks.
+
+            <p className="text-[#A9B1BB] text-sm sm:text-base leading-relaxed font-['Inter'] max-w-md pt-1">
+              Have a project in mind? Let's discuss how we can bring your ideas to life.
             </p>
           </div>
 
-          <div className="space-y-6 relative z-10 max-w-sm">
-            {/* Call */}
-            <div className="flex items-center gap-5">
-              <a 
-                href="https://wa.me/8801870766945"
-                target="_blank"
-                rel="noreferrer"
-                className="w-12 h-12 bg-[#0052FF]/10 hover:bg-[#0052FF]/20 text-[#0084FF] rounded-full flex items-center justify-center border border-[#0052FF]/20 shrink-0 transition-all cursor-pointer shadow-[0_0_15px_rgba(0,82,255,0.1)] hover:scale-105"
-              >
-                <Phone size={18} />
-              </a>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Phone</p>
-                <a 
-                  href="https://wa.me/8801870766945"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-white font-extrabold text-sm sm:text-lg block truncate hover:text-[#0084FF] transition-colors"
-                >
-                  +880 1870 766945
-                </a>
+          {/* Contact Information Cards */}
+          <div className="space-y-3.5 max-w-md">
+            {/* Email Card */}
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-[#10151C] border border-[#B7E36A]/10 hover:border-[#B7E36A]/30 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-xl bg-[#181E25] border border-[#B7E36A]/30 flex items-center justify-center text-[#B7E36A] shadow-[0_0_12px_rgba(183,227,106,0.15)] shrink-0">
+                <Mail size={20} />
               </div>
-            </div>
-
-            {/* Email */}
-            <div className="flex items-center gap-5">
-              <a 
-                href="#contact-form"
-                onClick={handleEmailClick}
-                className="w-12 h-12 bg-[#0052FF]/10 hover:bg-[#0052FF]/20 text-[#0084FF] rounded-full flex items-center justify-center border border-[#0052FF]/20 shrink-0 transition-all cursor-pointer shadow-[0_0_15px_rgba(0,82,255,0.1)] hover:scale-105"
-              >
-                <Mail size={18} />
-              </a>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Email</p>
+                <p className="text-xs font-bold text-[#F5F7FA] mb-0.5 font-['Inter']">Email</p>
                 <a 
                   href="#contact-form" 
                   onClick={handleEmailClick}
-                  className="text-white font-extrabold text-sm sm:text-lg block truncate hover:text-[#0084FF] transition-colors cursor-pointer"
+                  className="text-[#A9B1BB] group-hover:text-[#F5F7FA] text-xs sm:text-sm font-normal block truncate transition-colors font-['Inter'] cursor-pointer"
                   title="mdabuhanifsarker91@gmail.com"
                 >
                   mdabuhanifsarker91@gmail.com
@@ -1414,141 +1693,154 @@ const ContactSection = ({
               </div>
             </div>
 
-            {/* Location */}
+            {/* Phone Card */}
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-[#10151C] border border-[#B7E36A]/10 hover:border-[#B7E36A]/30 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-xl bg-[#181E25] border border-[#B7E36A]/30 flex items-center justify-center text-[#B7E36A] shadow-[0_0_12px_rgba(183,227,106,0.15)] shrink-0">
+                <Phone size={20} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-[#F5F7FA] mb-0.5 font-['Inter']">Phone</p>
+                <a 
+                  href="https://wa.me/8801870766945"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[#A9B1BB] group-hover:text-[#F5F7FA] text-xs sm:text-sm font-normal block truncate transition-colors font-['Inter']"
+                >
+                  +880 1870 766945
+                </a>
+              </div>
+            </div>
+
+            {/* Location Card */}
             <a 
               href="https://maps.app.goo.gl/8md9qCKRhSMkmigKA" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center gap-5 group/location cursor-pointer"
+              className="flex items-center gap-4 p-4 rounded-xl bg-[#10151C] border border-[#B7E36A]/10 hover:border-[#B7E36A]/30 transition-all duration-300 group cursor-pointer"
             >
-              <div className="w-12 h-12 bg-[#0052FF]/10 group-hover/location:bg-[#0052FF]/20 text-[#0084FF] rounded-full flex items-center justify-center border border-[#0052FF]/20 shrink-0 transition-all shadow-[0_0_15px_rgba(0,82,255,0.1)] group-hover/location:scale-105">
-                <MapPin size={18} />
+              <div className="w-12 h-12 rounded-xl bg-[#181E25] border border-[#B7E36A]/30 flex items-center justify-center text-[#B7E36A] shadow-[0_0_12px_rgba(183,227,106,0.15)] shrink-0">
+                <MapPin size={20} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover/location:text-[#0084FF] transition-colors">Location</p>
-                <p className="text-white font-extrabold text-sm sm:text-lg truncate group-hover/location:text-[#0084FF] transition-colors">Gazipur, Dhaka, Bangladesh</p>
+                <p className="text-xs font-bold text-[#F5F7FA] mb-0.5 font-['Inter']">Location</p>
+                <p className="text-[#A9B1BB] group-hover:text-[#F5F7FA] text-xs sm:text-sm font-normal block truncate transition-colors font-['Inter']">
+                  Gazipur, Dhaka, Bangladesh
+                </p>
               </div>
             </a>
           </div>
 
-          {/* Abstract Rotating Orbital Sphere Widget matching mockup exactly */}
-          <div className="absolute right-4 bottom-24 md:right-8 md:bottom-28 w-44 h-44 pointer-events-none opacity-25 md:opacity-100">
-            <div className="relative w-full h-full flex items-center justify-center">
-              {/* Center glowing blue sphere */}
-              <div className="w-6 h-6 rounded-full bg-gradient-to-r from-[#0052FF] to-[#00E5FF] shadow-[0_0_35px_rgba(0,102,255,0.95)] animate-pulse" />
-              
-              {/* Orbit Ring 1 */}
-              <div className="absolute w-32 h-10 rounded-full border border-[#0084FF]/25 transform -rotate-[25deg] animate-[spin_12s_linear_infinite]" style={{ transformStyle: 'preserve-3d' }}>
-                {/* Orbiter 1 */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#00E5FF] rounded-full shadow-[0_0_8px_rgba(0,229,255,0.8)]" />
-              </div>
-
-              {/* Orbit Ring 2 */}
-              <div className="absolute w-36 h-14 rounded-full border border-[#0052FF]/15 transform rotate-[40deg] animate-[spin_18s_linear_infinite]" style={{ transformStyle: 'preserve-3d' }}>
-                {/* Orbiter 2 */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#0052FF] rounded-full shadow-[0_0_8px_rgba(0,82,255,0.8)]" />
-              </div>
-            </div>
+          {/* Social Icons Row - Centered on Mobile */}
+          <div className="flex flex-wrap justify-center sm:justify-start gap-3 pt-2">
+            {[
+              { Icon: FaFacebook, url: 'https://www.facebook.com/profile.php?id=61592538396121' },
+              { Icon: FaInstagram, url: 'https://www.instagram.com/editor_abu.hanif/' },
+              { Icon: FaYoutube, url: 'https://www.youtube.com/@Abu_Hanif_Sarker' },
+              { Icon: FaLinkedin, url: 'https://www.linkedin.com/in/mdabuhanifsarker/' },
+              { Icon: FaPinterest, url: 'https://www.pinterest.com/mdabuhanifsarker' },
+              { Icon: FaBehance, url: 'https://www.behance.net/mdabuhanifsarker' },
+              { Icon: FaGithub, url: 'https://github.com/mdabuhanifsarker' },
+              { Icon: FaTelegramPlane, url: 'https://t.me/mdabuhanifsarker' },
+            ].map((social, i) => (
+              <motion.a
+                key={i}
+                href={social.url}
+                target="_blank"
+                rel="noreferrer"
+                whileHover={{ y: -2, scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-11 h-11 rounded-xl bg-[#181E25] border border-white/10 hover:border-[#B7E36A]/50 text-[#B7E36A] hover:text-[#C8F27A] flex items-center justify-center transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.3)] hover:shadow-[0_0_20px_rgba(183,227,106,0.25)]"
+              >
+                <social.Icon size={18} />
+              </motion.a>
+            ))}
           </div>
 
-          <div className="space-y-4 relative z-10">
-            <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Follow me</h4>
-            <div className="flex flex-wrap gap-2.5 justify-center sm:justify-start">
-              {[
-                { Icon: FaFacebook, url: 'https://www.facebook.com/profile.php?id=61592538396121', color: '#1877F2' },
-                { Icon: FaYoutube, url: 'https://www.youtube.com/@Abu_Hanif_Sarker', color: '#FF0000' },
-                { Icon: FaInstagram, url: 'https://www.instagram.com/editor_abu.hanif/', color: '#E4405F' },
-                { Icon: FaPinterest, url: 'https://www.pinterest.com/mdabuhanifsarker', color: '#BD081C' },
-                { Icon: FaLinkedin, url: 'https://www.linkedin.com/in/mdabuhanifsarker/', color: '#0A66C2' },
-                { Icon: FaBehance, url: 'https://www.behance.net/mdabuhanifsarker', color: '#0057FF' },
-                { Icon: FaGithub, url: 'https://github.com/mdabuhanifsarker', color: '#FFFFFF' },
-                { Icon: FaTelegramPlane, url: 'https://t.me/mdabuhanifsarker', color: '#26A5E4' },
-              ].map((social, i) => (
-                <motion.a
-                  key={i}
-                  href={social.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  whileHover={{ y: -3, scale: 1.1, borderColor: "rgba(0, 102, 255, 0.4)" }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-9 h-9 rounded-full flex items-center justify-center bg-[#040814]/80 border border-[#1E2B43] text-slate-450 hover:text-white transition-all shadow-sm"
-                  style={{ color: social.color }}
-                >
-                  <social.Icon size={14} />
-                </motion.a>
-              ))}
-            </div>
-          </div>
         </div>
 
-        {/* Right Side: Contact Form styled identically to mockup */}
-        <div id="contact-form" className="bg-[#0C1220] border border-[#1E2B43] p-8 sm:p-10 md:p-12 rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
-          <h2 className="text-3xl sm:text-4xl md:text-[42px] font-black text-white tracking-tight leading-none mb-8">
-            Mail Me <span className="text-[#0084FF] inline-block animate-pulse font-sans">.</span>
-          </h2>
+        {/* Right Column: Contact Form Card */}
+        <div id="contact-form" className="lg:col-span-7 bg-[#181E25] border border-[#B7E36A]/20 p-6 sm:p-8 md:p-10 rounded-2xl md:rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+          {/* Subtle Accent Glow Backing */}
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#B7E36A]/5 blur-[90px] rounded-full pointer-events-none" />
+
           <form 
             onSubmit={handleEmailSubmit} 
-            className="space-y-5"
+            className="space-y-5 relative z-10"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-1.5">
-                <input 
-                  id="contact-name"
-                  name="name" 
-                  placeholder="Your Name"
-                  required 
-                  disabled={isSending}
-                  className="w-full h-14 bg-[#040814] border border-[#1E2B43] rounded-xl px-4 focus:outline-none focus:border-[#0084FF] text-white transition-all font-medium disabled:opacity-50 text-sm placeholder-slate-550 focus:shadow-[0_0_15px_rgba(0,102,255,0.15)]" 
-                />
-              </div>
-              <div className="space-y-1.5">
-                <input 
-                  name="email" 
-                  type="email" 
-                  placeholder="Email Address"
-                  required 
-                  disabled={isSending}
-                  className="w-full h-14 bg-[#040814] border border-[#1E2B43] rounded-xl px-4 focus:outline-none focus:border-[#0084FF] text-white transition-all font-medium disabled:opacity-50 text-sm placeholder-slate-550 focus:shadow-[0_0_15px_rgba(0,102,255,0.15)]" 
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
+            <div className="space-y-2">
+              <label htmlFor="contact-name" className="block text-sm font-semibold text-[#F5F7FA] font-['Inter']">
+                Your Name
+              </label>
               <input 
-                name="phone" 
-                placeholder="Subject (Optional)"
+                id="contact-name"
+                name="name" 
+                placeholder="Enter your name"
+                required 
                 disabled={isSending}
-                className="w-full h-14 bg-[#040814] border border-[#1E2B43] rounded-xl px-4 focus:outline-none focus:border-[#0084FF] text-white transition-all font-medium disabled:opacity-50 text-sm placeholder-slate-550 focus:shadow-[0_0_15px_rgba(0,102,255,0.15)]" 
+                className="w-full h-13 bg-[#10151C] border border-white/10 focus:border-[#B7E36A] rounded-xl px-4 text-[#F5F7FA] placeholder-[#697586] text-sm font-normal focus:outline-none focus:ring-1 focus:ring-[#B7E36A] focus:shadow-[0_0_15px_rgba(183,227,106,0.2)] transition-all disabled:opacity-50 font-['Inter']" 
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-[#F5F7FA] font-['Inter']">
+                Your Email
+              </label>
+              <input 
+                name="email" 
+                type="email" 
+                placeholder="Enter your email"
+                required 
+                disabled={isSending}
+                className="w-full h-13 bg-[#10151C] border border-white/10 focus:border-[#B7E36A] rounded-xl px-4 text-[#F5F7FA] placeholder-[#697586] text-sm font-normal focus:outline-none focus:ring-1 focus:ring-[#B7E36A] focus:shadow-[0_0_15px_rgba(183,227,106,0.2)] transition-all disabled:opacity-50 font-['Inter']" 
+              />
+            </div>
+
+            {/* Selected Service Field */}
+            <div className="space-y-2">
+              <label htmlFor="contact-service" className="block text-sm font-semibold text-[#F5F7FA] font-['Inter']">
+                Selected Service
+              </label>
+              <input 
+                id="contact-service"
+                name="phone" 
+                readOnly
+                value={selectedPackage || ''}
+                disabled={isSending}
+                className={`w-full h-13 bg-[#10151C] ${selectedPackage ? 'border border-[#B7E36A]/40 text-[#B7E36A] font-bold shadow-[0_0_12px_rgba(183,227,106,0.15)]' : 'border border-white/10 text-[#F5F7FA] font-normal'} rounded-xl px-4 text-sm font-['Inter'] cursor-default focus:outline-none transition-all disabled:opacity-50`} 
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-[#F5F7FA] font-['Inter']">
+                Your Message
+              </label>
               <textarea 
                 name="message" 
-                placeholder="Your Message"
+                placeholder="Enter your message"
                 required 
-                rows={4} 
+                rows={5} 
                 disabled={isSending}
-                className="w-full bg-[#040814] border border-[#1E2B43] rounded-xl p-4 focus:outline-none focus:border-[#0084FF] text-white resize-none transition-all font-medium disabled:opacity-50 text-sm placeholder-slate-550 focus:shadow-[0_0_15px_rgba(0,102,255,0.15)]" 
+                className="w-full bg-[#10151C] border border-white/10 focus:border-[#B7E36A] rounded-xl p-4 text-[#F5F7FA] placeholder-[#697586] text-sm font-normal focus:outline-none focus:ring-1 focus:ring-[#B7E36A] focus:shadow-[0_0_15px_rgba(183,227,106,0.2)] transition-all resize-none disabled:opacity-50 font-['Inter']" 
               />
             </div>
 
             <motion.button 
-              whileHover={isSending ? {} : { scale: 1.02, y: -2 }}
-              whileTap={isSending ? {} : { scale: 0.98 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+              whileHover={isSending ? {} : { scale: 1.01, backgroundColor: "#C8F27A" }}
+              whileTap={isSending ? {} : { scale: 0.99 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
               type="submit" 
               disabled={isSending}
-              className={`w-full h-14 ${isSending ? 'bg-[#1E2B43] cursor-not-allowed text-slate-500' : 'bg-gradient-to-r from-[#0052FF] to-[#0084FF] hover:brightness-110 text-white shadow-[0_10px_30px_rgba(0,82,255,0.3)]'} rounded-xl font-bold uppercase text-xs tracking-widest transition-all duration-300 flex items-center justify-center gap-2.5 touch-manipulation cursor-pointer`}
+              className={`w-full h-14 ${isSending ? 'bg-[#252D37] cursor-not-allowed text-[#A9B1BB]' : 'bg-[#B7E36A] text-[#0B0F14] shadow-[0_10px_30px_rgba(183,227,106,0.25)] hover:shadow-[0_12px_35px_rgba(183,227,106,0.35)]'} rounded-xl font-bold text-base tracking-wide transition-all duration-150 flex items-center justify-center gap-2.5 cursor-pointer font-['Space_Grotesk']`}
             >
               {isSending ? (
                 <>
                   Sending Message...
-                  <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-slate-550 border-t-white" />
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-[#0B0F14] border-t-transparent" />
                 </>
               ) : (
                 <>
-                  <span>Send Message</span> <ArrowRight size={14} />
+                  <span>Send Message</span>
+                  <Send size={18} className="rotate-45" />
                 </>
               )}
             </motion.button>
@@ -1682,14 +1974,14 @@ const Portfolio = ({
   const renderTwoColorTitle = (text: string) => {
     const words = text.trim().split(/\s+/);
     if (words.length <= 1) {
-      return <span className="text-white text-[42px]">{text}</span>;
+      return <span className="text-[#F5F7FA] font-['Space_Grotesk']">{text}</span>;
     }
     const firstWord = words[0];
     const restOfWords = words.slice(1).join(' ');
     return (
-      <>
-        <span className="text-white text-[42px]">{firstWord}</span> <span className="text-[#4F8CFF] text-[42px]">{restOfWords}</span>
-      </>
+      <span className="font-['Space_Grotesk'] inline-flex items-center gap-2 flex-wrap justify-center">
+        <span className="text-[#F5F7FA]">{firstWord}</span> <span className="text-[#B7E36A]">{restOfWords}</span>
+      </span>
     );
   };
 
@@ -1815,21 +2107,22 @@ const Portfolio = ({
     <section className="py-24 md:py-32 px-6 md:px-12 space-y-12 md:space-y-16 min-h-screen">
       <div className="flex flex-col items-center justify-center text-center gap-6 w-full">
         <div className="space-y-4 flex flex-col items-center justify-center w-full">
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-3 sm:gap-4 w-full">
             {selectedCategoryId && (
-                <button 
+              <button 
                 onClick={() => setSelectedCategoryId(null)}
-                className="p-3 bg-gradient-to-r from-[#0052FF] to-[#0084FF] rounded-full text-white hover:brightness-110 transition-all flex items-center justify-center shadow-lg shadow-[#0052FF]/20 cursor-pointer"
+                className="p-2.5 sm:p-3 bg-[#B7E36A] hover:bg-[#C8F27A] rounded-full text-[#0B0F14] transition-all duration-150 flex items-center justify-center shadow-lg shadow-[rgba(183,227,106,0.25)] cursor-pointer shrink-0"
+                title="Back to folders"
               >
                 <ArrowRight size={20} className="rotate-180" />
               </button>
             )}
-            <h2 id="creative-showcase-heading" className="text-[42px] font-black text-[#4F8CFF] tracking-tighter text-center flex items-center justify-center gap-2 leading-tight">
+            <h2 id="creative-showcase-heading" className="text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-black text-[#B7E36A] tracking-tighter text-center flex items-center justify-center gap-2 leading-none font-['Space_Grotesk']">
               {activeFolder ? (
                 renderTwoColorTitle(activeFolder.title)
               ) : (
                 <>
-                  <span className="text-white text-[42px]">Creative</span> <span className="text-[#4F8CFF] text-[42px]">Showcase</span>
+                  <span className="text-[#F5F7FA]">Creative</span> <span className="text-[#B7E36A]">Showcase</span>
                 </>
               )}
             </h2>
@@ -2694,10 +2987,23 @@ export default function App() {
     }
   };
 
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+
+  const handleSelectPackage = (pkgName: string) => {
+    setSelectedPackage(pkgName);
+    setPage('contact');
+    setTimeout(() => {
+      const el = document.getElementById('contact-form');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  };
+
   const setPage = (newPage: Page) => {
     setPageInternal(newPage);
     setShowAllReviews(false);
-    const validPages: Page[] = ['home', 'projects', 'reviews', 'about', 'contact'];
+    const validPages: Page[] = ['home', 'projects', 'services', 'reviews', 'about', 'contact'];
     if (validPages.includes(newPage)) {
       if (newPage === 'home') {
         window.history.pushState(null, '', window.location.pathname + window.location.search);
@@ -2715,7 +3021,7 @@ export default function App() {
     const handleHashChange = () => {
       const rawHash = window.location.hash.replace('#', '');
       const hashPage = rawHash.split('/')[0] as Page;
-      const validPages: Page[] = ['home', 'projects', 'reviews', 'about', 'contact'];
+      const validPages: Page[] = ['home', 'projects', 'services', 'reviews', 'about', 'contact'];
       const pageToSet = validPages.includes(hashPage) ? hashPage : 'home';
       setPageInternal(pageToSet);
       setShowAllReviews(false);
@@ -2756,6 +3062,7 @@ export default function App() {
 
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [servicesList, setServicesList] = useState<ServicePackage[]>(SERVICES_DATA);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [aboutImage, setAboutImage] = useState<string | null>(null);
   const [homeImageUrl, setHomeImageUrl] = useState<string | null>(null);
@@ -3855,6 +4162,193 @@ export default function App() {
     return true;
   };
 
+  // Function to fetch services dynamically from Supabase 'services' table
+  const fetchSupabaseServices = async () => {
+    console.log("[Supabase Services] Initiating fetch for 'services' table...");
+    let fetchedRows: any[] = [];
+
+    const getCaseInsensitiveProp = (obj: any, keyName: string) => {
+      if (!obj) return undefined;
+      const lowerKey = keyName.toLowerCase();
+      for (const k of Object.keys(obj)) {
+        if (k.toLowerCase() === lowerKey) {
+          return obj[k];
+        }
+      }
+      return undefined;
+    };
+
+    // Attempt 1: JS Client SDK
+    try {
+      const { data, error } = await supabaseClient
+        .from('services')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (!error && data && data.length > 0) {
+        console.log(`[Supabase Services Success] ${data.length} services loaded via SDK`);
+        fetchedRows = data;
+      } else if (error) {
+        console.warn("[Supabase Services Error] SDK fetch encountered error:", error);
+      }
+    } catch (err: any) {
+      console.warn("[Supabase Services Error] SDK fetch exception:", err);
+    }
+
+    // Attempt 2: REST API fallback
+    if (fetchedRows.length === 0) {
+      try {
+        const restUrl = `${SUPABASE_URL}/rest/v1/services?select=*&order=created_at.asc`;
+        const response = await fetch(restUrl, {
+          method: 'GET',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const text = await response.text();
+          if (text) {
+            const parsed = JSON.parse(text);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              console.log(`[Supabase Services Success] ${parsed.length} services loaded via REST fallback`);
+              fetchedRows = parsed;
+            }
+          }
+        }
+      } catch (err: any) {
+        console.warn("[Supabase Services Error] REST fallback fetch exception:", err);
+      }
+    }
+
+    if (fetchedRows && fetchedRows.length > 0) {
+      const hasStandardInName = fetchedRows.some((r: any) => {
+        const nameVal = String(getCaseInsensitiveProp(r, 'name') || '').toLowerCase();
+        return nameVal.includes('standard');
+      });
+
+      const mappedServices: ServicePackage[] = fetchedRows.map((row: any, index: number) => {
+        const idVal = String(getCaseInsensitiveProp(row, 'id') || `service-${index}`);
+        const nameVal = String(getCaseInsensitiveProp(row, 'name') || 'Service');
+        const rawPrice = getCaseInsensitiveProp(row, 'price');
+        const rawFeatures = getCaseInsensitiveProp(row, 'features');
+        const descriptionVal = getCaseInsensitiveProp(row, 'description');
+        const unitVal = getCaseInsensitiveProp(row, 'unit');
+        const isPopularVal = getCaseInsensitiveProp(row, 'is_popular') ?? getCaseInsensitiveProp(row, 'isPopular');
+        const badgeVal = getCaseInsensitiveProp(row, 'badge');
+        const buttonLabelVal = getCaseInsensitiveProp(row, 'button_label') ?? getCaseInsensitiveProp(row, 'buttonLabel');
+
+        const nameLower = nameVal.toLowerCase();
+        const isStandardName = nameLower.includes('standard');
+        
+        let isPopular = false;
+        if (isPopularVal !== undefined && isPopularVal !== null) {
+          isPopular = Boolean(isPopularVal);
+        } else if (isStandardName) {
+          isPopular = true;
+        } else if (!hasStandardInName && index === 1 && fetchedRows.length === 3) {
+          isPopular = true;
+        }
+
+        const parseFeatures = (feats: any): string[] => {
+          if (!feats) return [];
+          const list: string[] = [];
+
+          const processItem = (item: any) => {
+            if (item === null || item === undefined) return;
+            if (typeof item === 'string') {
+              const trimmed = item.trim();
+              if (!trimmed) return;
+              if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                try {
+                  const parsed = JSON.parse(trimmed);
+                  if (Array.isArray(parsed)) {
+                    parsed.forEach(processItem);
+                    return;
+                  }
+                } catch (e) {}
+              }
+              if (trimmed.includes('\n')) {
+                trimmed.split('\n').forEach(s => {
+                  const sTrimmed = s.trim();
+                  if (sTrimmed) list.push(sTrimmed);
+                });
+              } else {
+                list.push(trimmed);
+              }
+            } else if (Array.isArray(item)) {
+              item.forEach(processItem);
+            } else {
+              const strVal = String(item).trim();
+              if (strVal) list.push(strVal);
+            }
+          };
+
+          if (Array.isArray(feats)) {
+            feats.forEach(processItem);
+          } else if (typeof feats === 'string') {
+            processItem(feats);
+          } else if (typeof feats === 'object') {
+            try {
+              Object.values(feats).forEach(processItem);
+            } catch (e) {}
+          }
+
+          return list;
+        };
+
+        const formatPrice = (p: any): string => {
+          if (p === null || p === undefined) return '';
+          const pStr = String(p).trim();
+          if (!pStr) return '';
+          if (/^[^\d]/.test(pStr) || pStr.includes('৳') || pStr.includes('$')) {
+            return pStr;
+          }
+          const num = Number(pStr);
+          if (!isNaN(num)) {
+            return `৳${num.toLocaleString()}`;
+          }
+          return pStr;
+        };
+
+        const getDefaultDescription = (name: string, idx: number) => {
+          if (nameLower.includes('basic')) return 'Perfect for simple projects and personal content.';
+          if (nameLower.includes('standard')) return 'Great for YouTube videos, vlogs and business content.';
+          if (nameLower.includes('pro')) return 'For advanced content, ads, and commercial projects.';
+          if (idx === 0) return 'Perfect for simple projects and personal content.';
+          if (idx === 1) return 'Great for YouTube videos, vlogs and business content.';
+          return 'For advanced content, ads, and commercial projects.';
+        };
+
+        const getIconType = (name: string, idx: number) => {
+          if (nameLower.includes('basic')) return 'basic';
+          if (nameLower.includes('pro')) return 'pro';
+          if (nameLower.includes('standard')) return 'standard';
+          if (idx === 0) return 'basic';
+          if (idx === 1) return 'standard';
+          return 'pro';
+        };
+
+        return {
+          id: idVal,
+          name: nameVal,
+          price: formatPrice(rawPrice),
+          features: parseFeatures(rawFeatures),
+          description: descriptionVal || getDefaultDescription(nameVal, index),
+          unit: unitVal || '/ Project',
+          isPopular: isPopular,
+          badge: badgeVal || (isPopular ? 'MOST POPULAR' : undefined),
+          iconType: getIconType(nameVal, index),
+          buttonLabel: buttonLabelVal || 'Get Started'
+        };
+      });
+
+      setServicesList(mappedServices);
+    }
+  };
+
   // Verifier to log logo_url, home_image_url, and about_image_url values and check if applied to the image elements
   useEffect(() => {
     console.log("[Image State Update Logs]");
@@ -3960,7 +4454,8 @@ export default function App() {
             fetchSupabasePortfolio(),
             fetchSupabaseSettings(),
             fetchSupabaseAssets(),
-            fetchSupabaseReviews()
+            fetchSupabaseReviews(),
+            fetchSupabaseServices()
           ]);
 
           // Load Reviews
@@ -4064,12 +4559,23 @@ export default function App() {
         console.log(`[Supabase Realtime] Reviews subscription status: ${status}`);
       });
 
+    const servicesChannel = supabaseClient
+      .channel('supabase-services-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, (payload) => {
+        console.log('[Supabase Realtime] Change detected in public.services table:', payload);
+        fetchSupabaseServices();
+      })
+      .subscribe((status) => {
+        console.log(`[Supabase Realtime] Services subscription status: ${status}`);
+      });
+
     // Poll every 6 seconds as a robust fallback in case WebSockets/Replication are disabled
     const intervalId = setInterval(() => {
       fetchSupabasePortfolio();
       fetchSupabaseSettings();
       fetchSupabaseAssets();
       fetchSupabaseReviews();
+      fetchSupabaseServices();
     }, 6000);
 
     return () => {
@@ -4078,6 +4584,7 @@ export default function App() {
       supabaseClient.removeChannel(settingsChannel);
       supabaseClient.removeChannel(assetsChannel);
       supabaseClient.removeChannel(reviewsChannel);
+      supabaseClient.removeChannel(servicesChannel);
       clearInterval(intervalId);
     };
   }, []);
@@ -4287,8 +4794,9 @@ export default function App() {
 
     try {
       // Compose Draft in mailto link format nicely
-      const subject = `Portfolio Project Inquiry from ${name}`;
-      const mailBody = `Hello Hanif,\n\nI would like to get in touch with you regarding a project.\n\nHere are my details:\n- Name: ${name}\n- Phone: ${phone}\n- Email: ${email}\n\nMessage:\n${message}\n\nSent from Portfolio Contact Form.`;
+      const selectedService = phone || selectedPackage || 'General Inquiry';
+      const subject = `Portfolio Project Inquiry (${selectedService}) from ${name}`;
+      const mailBody = `Hello Hanif,\n\nI would like to get in touch with you regarding a project.\n\nHere are my details:\n- Name: ${name}\n- Selected Service: ${selectedService}\n- Email: ${email}\n\nMessage:\n${message}\n\nSent from Portfolio Contact Form.`;
       const mailtoLink = `mailto:mdabuhanifsarker91@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailBody)}`;
       
       window.location.href = mailtoLink;
@@ -4374,6 +4882,13 @@ export default function App() {
                 addNotification={addNotification}
                 siteSettings={siteSettings}
               />
+              <ServicesSection 
+                onSelectPackage={handleSelectPackage} 
+                selectedPackage={selectedPackage}
+                isHomepagePreview={true} 
+                setPage={setPage} 
+                servicesData={servicesList}
+              />
               <ReviewsSection 
                 reviews={reviews}
                 setReviews={setReviews}
@@ -4383,7 +4898,12 @@ export default function App() {
                 onSubmitReview={handleReviewSubmit}
                 showReviewList={false}
               />
-              <ContactSection handleEmailSubmit={handleEmailSubmit} isSending={isEmailSending} />
+              <ContactSection 
+                handleEmailSubmit={handleEmailSubmit} 
+                isSending={isEmailSending} 
+                selectedPackage={selectedPackage}
+                setSelectedPackage={setSelectedPackage}
+              />
             </>
           )}
 
@@ -4410,188 +4930,191 @@ export default function App() {
               onRefreshSupabase={fetchSupabasePortfolio}
             />
           )}
+
+          {currentPage === 'services' && (
+            <div className="py-8 animate-fade-in">
+              <ServicesSection 
+                onSelectPackage={handleSelectPackage} 
+                selectedPackage={selectedPackage}
+                isHomepagePreview={false} 
+                setPage={setPage} 
+                servicesData={servicesList}
+              />
+            </div>
+          )}
           
           {currentPage === 'reviews' && (
-            <div className="py-24 md:py-32 px-6 md:px-12 max-w-5xl mx-auto space-y-24">
-                <header className="text-center space-y-6">
-                  <h2 className="text-5xl md:text-8xl font-bold text-white tracking-tighter leading-none -letter-spacing-[0.03em]">
-                    Client <br/><span className="text-[#4F8CFF]">Experiences.</span>
-                  </h2>
-                </header>
+            <div className="py-20 md:py-28 px-6 md:px-12 max-w-4xl mx-auto space-y-16 font-['Inter']">
+              <header className="text-center space-y-4">
+                <h2 className="text-5xl sm:text-7xl md:text-8xl font-extrabold text-[#F5F7FA] tracking-tight leading-none font-['Space_Grotesk']">
+                  Client <br className="sm:hidden" /><span className="text-[#B7E36A]">Experiences.</span>
+                </h2>
+              </header>
 
-                {/* Review Submission Box */}
-                <div className="bg-[#171C22] border border-[#252D37] p-8 md:p-12 rounded-[22px] space-y-12 mt-[-42px] shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
-                  <div className="text-center space-y-4">
-                    <h3 className="text-2xl md:text-3xl font-bold text-white uppercase tracking-tight">Leave a Rating</h3>
-                    <div className="flex justify-center gap-1.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button 
-                          key={star}
-                          onClick={() => {
-                            const form = document.getElementById('review-form') as HTMLFormElement;
-                            if (form) {
-                              form.dataset.rating = star.toString();
-                              setSelectedRating(star);
-                            }
-                          }}
-                          className={`p-1 transition-all hover:scale-125 active:scale-95 cursor-pointer ${selectedRating >= star ? 'text-[#4F8CFF]' : 'text-slate-700 hover:text-slate-500'}`}
-                        >
-                          <Star size={36} fill={selectedRating >= star ? "currentColor" : "none"} />
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-[10px] font-bold text-[#697586] uppercase tracking-widest italic">Pick your score</p>
-                  </div>
+              {/* Review Submission Card */}
+              <ReviewFormCard 
+                selectedRating={selectedRating}
+                setSelectedRating={setSelectedRating}
+                onSubmitReview={handleReviewSubmit}
+                addNotification={addNotification}
+                formId="page-review-form"
+              />
 
-                  <form 
-                    id="review-form"
-                    className="grid grid-cols-1 gap-8"
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      const formData = new FormData(e.currentTarget);
-                      const emailVal = (formData.get('userEmail') as string || "").trim();
-                      const opinionVal = (formData.get('userComment') as string || "").trim();
-                      
-                      if (selectedRating === 0 && opinionVal === "") {
-                        alert("Please select a rating, write an opinion, or both!");
-                        return;
-                      }
-                      
-                      const success = await handleReviewSubmit(selectedRating, opinionVal, emailVal);
-                      if (success) {
-                        addNotification("Review Posted", "Thank you for your valuable feedback!");
-                        setSelectedRating(0);
-                        (e.target as HTMLFormElement).reset();
-                      }
-                    }}
-                  >
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-bold text-[#9CA8B8] uppercase tracking-widest">Your Email (Optional)</label>
-                      <input 
-                        type="email" 
-                        name="userEmail" 
-                        className="w-full bg-[#11161C] border border-[#252D37] rounded-[14px] px-4 py-3 text-white text-base focus:outline-none focus:border-[#4F8CFF] transition-all font-medium placeholder:text-slate-600" 
-                        placeholder="alex@example.com" 
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-bold text-[#9CA8B8] uppercase tracking-widest">Your Opinion</label>
-                      <textarea 
-                        name="userComment" 
-                        rows={4} 
-                        className="w-full bg-[#11161C] border border-[#252D37] rounded-[14px] p-4 text-white text-base focus:outline-none focus:border-[#4F8CFF] transition-all font-medium resize-none placeholder:text-slate-600" 
-                        placeholder="How was your experience working with me?" 
-                      />
-                    </div>
-                    <div>
-                      <motion.button 
-                        whileHover={{ scale: 1.02, y: -3 }}
-                        whileTap={{ scale: 0.98 }}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ 
-                          type: "spring", 
-                          stiffness: 400, 
-                          damping: 15 
-                        }}
-                        type="submit"
-                        className="w-full py-4 bg-[#4F8CFF] hover:bg-[#72A8FF] text-white rounded-full font-bold uppercase text-xs tracking-widest shadow-[0_10px_30px_rgba(79,140,255,0.15)] transition-all cursor-pointer"
-                      >
-                        Post My Review
-                      </motion.button>
-                    </div>
-                  </form>
-                </div>
-
-                {/* Review List */}
-                <ReviewList reviews={reviews} />
-              </div>
+              {/* Review List */}
+              <ReviewList reviews={reviews} />
+            </div>
           )}
 
           {currentPage === 'about' && (
-            <div className="py-24 md:py-32 px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-24 items-center max-w-7xl mx-auto">
-              <div className="aspect-[3/4] bg-[#171C22] border border-[#252D37] relative p-2 md:p-3 rounded-[22px] overflow-hidden group shadow-[0_20px_60px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_60px_rgba(79,140,255,0.1)] transition-all duration-500">
-                {aboutImageUrl ? (
-                  <img 
-                    src={aboutImageUrl} 
-                    className="w-full h-full object-cover rounded-[14px] relative z-10"
-                    alt="Abu Hanif - Senior Post-Production Specialist" 
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-full h-full rounded-[14px] bg-[#12161B] animate-pulse flex items-center justify-center relative z-10">
-                    <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10" />
+            <div className="py-16 md:py-24 px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center max-w-7xl mx-auto font-['Inter']">
+              {/* Left Column: Image Card with Soft Green Glow & Signature */}
+              <div className="lg:col-span-5 relative group">
+                <div className="relative aspect-[3/4] w-full bg-[#10151C] border border-[#B7E36A]/30 rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(183,227,106,0.15)] transition-all duration-500 hover:border-[#B7E36A]/60 hover:shadow-[0_0_50px_rgba(183,227,106,0.25)]">
+                  {aboutImageUrl ? (
+                    <img 
+                      src={aboutImageUrl} 
+                      className="w-full h-full object-cover rounded-3xl relative z-10 transition-transform duration-700 group-hover:scale-105"
+                      alt="Abu Hanif - Video Editor" 
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-3xl bg-[#10151C] animate-pulse flex items-center justify-center relative z-10">
+                      <div className="w-20 h-20 rounded-full bg-[#B7E36A]/10 border border-[#B7E36A]/20" />
+                    </div>
+                  )}
+
+                  {/* Gradient vignette overlay at bottom */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F14]/90 via-[#0B0F14]/20 to-transparent z-15 pointer-events-none" />
+
+                  {/* Signature graphic overlay */}
+                  <div className="absolute bottom-6 left-6 right-6 z-20 flex items-center justify-between pointer-events-none select-none">
+                    <span className="font-caveat text-4xl sm:text-5xl text-[#B7E36A] font-bold tracking-wide drop-shadow-[0_2px_12px_rgba(183,227,106,0.6)]">
+                      Abu Hanif
+                    </span>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-black/10 mix-blend-overlay z-[5]" />
-                 
-                 {isAdmin && (
-                   <div 
-                     className="absolute inset-0 bg-black/80 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-6 z-20"
-                   >
-                     <label 
-                       htmlFor="about-upload" 
-                       className="flex flex-col items-center justify-center cursor-pointer text-white hover:text-[#4F8CFF] transition-all group/btn"
-                     >
-                       <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-2 group-hover/btn:scale-110 group-hover/btn:bg-white/20 transition-all text-[#4F8CFF]">
-                         <Upload size={18} />
-                       </div>
-                       <span className="text-[10px] font-bold uppercase tracking-widest">Change Photo</span>
-                     </label>
-                     <input 
-                       type="file" 
-                       id="about-upload" 
-                       className="hidden" 
-                       accept="image/*"
-                       onChange={(e) => {
-                         const file = e.target.files?.[0];
-                         if (file) {
-                           const reader = new FileReader();
-                           reader.onloadend = () => {
-                             const base64String = reader.result as string;
-                             setAboutImage(base64String);
-                             setAboutImageUrl(base64String);
-                             addNotification("Photo Changed", "Your profile photo has been updated successfully.");
-                           };
-                           reader.readAsDataURL(file);
-                         }
-                       }}
-                     />
-                     
-                     <button
-                       onClick={(e) => {
-                         e.stopPropagation();
-                         e.preventDefault();
-                         setAboutImage(null);
-                         setAboutImageUrl(null);
-                         addNotification("Photo Cleared", "Profile photo cleared.");
-                       }}
-                       className="flex flex-col items-center justify-center cursor-pointer text-red-400 hover:text-red-350 transition-all group/btn"
-                     >
-                       <div className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center mb-1.5 group-hover/btn:scale-110 group-hover/btn:bg-red-500/20 transition-all">
-                         <Trash2 size={14} />
-                       </div>
-                       <span className="text-[9px] font-bold uppercase tracking-widest">Clear Photo</span>
-                     </button>
-                   </div>
-                 )}
-               </div>
-               <div className="space-y-6 md:space-y-8">
-                 <h2 className="text-6xl md:text-8xl font-bold text-white tracking-tighter leading-none -letter-spacing-[0.03em]">ABU<br/><span className="text-[#4F8CFF]">HANIF.</span></h2>
-                 <div className="h-0 w-24 border-t border-[#252D37]" />
-                 <p className="text-[#9CA8B8] text-lg md:text-xl leading-relaxed font-medium">
-                   Expert Video Editor and Visual Director elevating brand stories.
-                 </p>
-                 <p className="text-[#697586] text-sm md:text-base leading-relaxed font-medium">
-                   Experienced Video Editor with 2+ years of mastery in Premiere Pro, After Effects, and DaVinci Resolve. I specialize in blending technical precision with artistic storytelling to deliver high-quality, cinematic results.
-                 </p>
-               </div>
-             </div>
+
+                  {/* Admin Photo Upload Overlay */}
+                  {isAdmin && (
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-6 z-30">
+                      <label 
+                        htmlFor="about-upload" 
+                        className="flex flex-col items-center justify-center cursor-pointer text-white hover:text-[#B7E36A] transition-all group/btn"
+                      >
+                        <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-2 group-hover/btn:scale-110 group-hover/btn:bg-[#B7E36A]/20 transition-all text-[#B7E36A]">
+                          <Upload size={18} />
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest font-['Space_Grotesk']">Change Photo</span>
+                      </label>
+                      <input 
+                        type="file" 
+                        id="about-upload" 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              const base64String = reader.result as string;
+                              setAboutImage(base64String);
+                              setAboutImageUrl(base64String);
+                              addNotification("Photo Changed", "Your profile photo has been updated successfully.");
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setAboutImage(null);
+                          setAboutImageUrl(null);
+                          addNotification("Photo Cleared", "Profile photo cleared.");
+                        }}
+                        className="flex flex-col items-center justify-center cursor-pointer text-red-400 hover:text-red-350 transition-all group/btn"
+                      >
+                        <div className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center mb-1.5 group-hover/btn:scale-110 group-hover/btn:bg-red-500/20 transition-all">
+                          <Trash2 size={14} />
+                        </div>
+                        <span className="text-[9px] font-bold uppercase tracking-widest font-['Space_Grotesk']">Clear Photo</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: Bio Content & Action Buttons */}
+              <div className="lg:col-span-7 space-y-6 sm:space-y-8">
+                {/* Section Title Badge */}
+                <div className="flex items-center gap-2 text-[#B7E36A] text-xs font-bold uppercase tracking-[0.25em] font-['Space_Grotesk']">
+                  <span>ABOUT ME</span>
+                  <span className="w-2 h-2 rounded-full bg-[#B7E36A] shadow-[0_0_8px_#B7E36A]" />
+                </div>
+
+                {/* Main Heading */}
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#F5F7FA] tracking-tight leading-[1.12] font-['Space_Grotesk']">
+                  Crafting Stories Through Visuals
+                </h1>
+
+                {/* Paragraphs */}
+                <div className="space-y-4 text-[#A9B1BB] text-sm sm:text-base md:text-lg leading-relaxed font-['Inter']">
+                  <p>
+                    I’m Abu Hanif, a professional video editor with a passion for storytelling. I transform raw footage into powerful visual experiences.
+                  </p>
+                  <p>
+                    With years of experience, I help brands, creators, and businesses bring their ideas to life through cinematic editing.
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap items-center gap-4 pt-4">
+                  <button
+                    onClick={() => {
+                      const targetUrl = cvUrl || 'https://drive.google.com/file/d/1gYg75vT_L_yqF5L9A9P6zLpxgS7i2l9-/view?usp=sharing';
+                      if (targetUrl) {
+                        const link = document.createElement('a');
+                        link.href = targetUrl;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        if (!targetUrl.includes('drive.google.com') && !targetUrl.includes('dropbox.com')) {
+                          link.download = 'CV.pdf';
+                        }
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }
+                    }}
+                    className="px-7 py-3.5 bg-[#B7E36A] hover:bg-[#C8F27A] text-[#0B0F14] rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-150 flex items-center gap-2.5 shadow-[0_8px_25px_rgba(183,227,106,0.3)] cursor-pointer font-['Space_Grotesk']"
+                  >
+                    <Download size={16} />
+                    <span>Download CV</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setPage('contact');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="px-7 py-3.5 bg-[#181E25] hover:bg-[#B7E36A] text-[#F5F7FA] hover:text-[#0B0F14] border border-[#B7E36A]/40 hover:border-transparent rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-150 flex items-center gap-2.5 cursor-pointer font-['Space_Grotesk'] shadow-sm"
+                  >
+                    <span>Contact Me</span>
+                    <Send size={15} />
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           {currentPage === 'contact' && (
             <div className="py-8 animate-fade-in">
-              <ContactSection handleEmailSubmit={handleEmailSubmit} isSending={isEmailSending} />
+              <ContactSection 
+                handleEmailSubmit={handleEmailSubmit} 
+                isSending={isEmailSending} 
+                selectedPackage={selectedPackage}
+                setSelectedPackage={setSelectedPackage}
+              />
             </div>
           )}
 
@@ -4624,17 +5147,17 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      <footer className="py-24 md:py-32 px-6 md:px-12 border-t border-[#252D37] bg-[#090B0E] space-y-24">
+      <footer className="py-24 md:py-32 px-6 md:px-12 border-t border-[#B7E36A]/20 bg-[#0D1218] space-y-24">
         <div className="max-w-7xl mx-auto w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-16 md:gap-12">
           {/* Col 1: About */}
           <div className="flex flex-col items-center md:items-start">
             <div className="w-fit">
               <div 
-                className="text-white font-bold text-4xl md:text-5xl tracking-tight select-none text-center mb-6 -letter-spacing-[0.03em]"
+                className="text-[#F5F7FA] font-extrabold text-4xl md:text-5xl tracking-tight select-none text-center mb-6 -letter-spacing-[0.03em] font-['Space_Grotesk']"
               >
                 ABU HANIF
               </div>
-              <p className="text-[#9CA8B8] text-sm leading-relaxed font-medium max-w-sm text-center mx-auto md:mx-0">
+              <p className="text-[#A9B1BB] text-sm leading-relaxed font-medium max-w-sm text-center mx-auto md:mx-0 font-['Inter']">
                 Senior Post-Production Specialist dedicated to cinematic excellence. I specialize in 
                 high-end video editing and color grading, transforming creative visions into 
                 compelling visual narratives with technical precision.
@@ -4645,8 +5168,8 @@ export default function App() {
           {/* Col 2: Categories (Folders) */}
           <div className="flex flex-col items-center">
             <div className="w-fit">
-              <h4 className="text-white font-bold text-lg uppercase tracking-tight text-center mb-6">Collections</h4>
-              <ul className="space-y-3 text-left md:pl-2">
+              <h4 className="text-[#F5F7FA] font-bold text-lg uppercase tracking-tight text-center mb-6 font-['Space_Grotesk']">Collections</h4>
+              <ul className="space-y-3 text-left md:pl-2 font-['Inter']">
                 {groupedProjects.map((folder) => (
                   <li 
                     key={folder.id} 
@@ -4655,9 +5178,9 @@ export default function App() {
                         setSelectedCategoryId(folder.id);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="flex items-center gap-3 text-[#9CA8B8] text-sm font-medium hover:text-[#4F8CFF] transition-all cursor-pointer group"
+                    className="flex items-center gap-3 text-[#A9B1BB] text-sm font-medium hover:text-[#B7E36A] transition-all cursor-pointer group"
                   >
-                    <div className="w-1.5 h-1.5 bg-[#4F8CFF] rounded-full shrink-0 group-hover:scale-150 transition-transform" />
+                    <div className="w-1.5 h-1.5 bg-[#B7E36A] rounded-full shrink-0 group-hover:scale-150 transition-transform" />
                     {folder.title}
                   </li>
                 ))}
@@ -4668,12 +5191,12 @@ export default function App() {
           {/* Col 3: Skills */}
           <div className="flex flex-col items-center">
             <div className="w-fit">
-              <h4 className="text-white font-bold text-lg uppercase tracking-tight text-center mb-6">Skills</h4>
-              <ul className="space-y-3 text-left md:pl-2">
+              <h4 className="text-[#F5F7FA] font-bold text-lg uppercase tracking-tight text-center mb-6 font-['Space_Grotesk']">Skills</h4>
+              <ul className="space-y-3 text-left md:pl-2 font-['Inter']">
                 {['Premiere Pro', 'After Effects', 'CapCut', 'DaVinci Resolve'].map((skill) => (
                   <li 
                     key={skill}
-                    className="text-[#9CA8B8] text-sm font-medium transition-all duration-300 text-center md:text-left block"
+                    className="text-[#A9B1BB] text-sm font-medium transition-all duration-300 text-center md:text-left block"
                   >
                     {skill}
                   </li>
@@ -4685,27 +5208,27 @@ export default function App() {
           {/* Col 4: Navigation & CTA */}
           <div className="flex flex-col items-center md:items-end">
             <div className="w-fit">
-              <h4 className="text-white font-bold text-lg uppercase tracking-tight text-center mb-6">Navigation</h4>
-              <div className="flex flex-col items-center justify-center gap-3 text-center mb-8">
-                {(['projects', 'reviews', 'contact', 'about'] as Page[]).map((page) => (
+              <h4 className="text-[#F5F7FA] font-bold text-lg uppercase tracking-tight text-center mb-6 font-['Space_Grotesk']">Navigation</h4>
+              <div className="flex flex-col items-center justify-center gap-3 text-center mb-8 font-['Space_Grotesk']">
+                {(['projects', 'services', 'reviews', 'contact', 'about'] as Page[]).map((page) => (
                   <button
                     key={page}
                     onClick={() => {
                       setPage(page);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="text-[#9CA8B8] hover:text-[#4F8CFF] transition-colors text-sm font-medium text-center cursor-pointer"
+                    className="text-[#A9B1BB] hover:text-[#B7E36A] transition-colors text-sm font-medium text-center cursor-pointer"
                   >
-                    {page === 'projects' ? 'PORTFOLIO' : page.toUpperCase()}
+                    {page === 'projects' ? 'PORTFOLIO' : page === 'services' ? 'SERVICES' : page.toUpperCase()}
                   </button>
                 ))}
               </div>
               
               <motion.button 
-                whileHover={{ scale: 1.03, y: -3 }}
+                whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setPage('contact')}
-                className="w-full bg-[#4F8CFF] hover:bg-[#72A8FF] text-white px-10 py-3.5 h-[48px] rounded-full font-bold text-xs uppercase tracking-widest transition-all duration-250 shadow-[0_10px_30px_rgba(79,140,255,0.15)] flex items-center justify-center touch-manipulation cursor-pointer"
+                className="w-full bg-[#B7E36A] hover:bg-[#C8F27A] text-[#0B0F14] px-10 py-3.5 h-[48px] rounded-full font-extrabold text-xs uppercase tracking-widest transition-all duration-150 shadow-[0_0_20px_rgba(183,227,106,0.3)] flex items-center justify-center touch-manipulation cursor-pointer font-['Space_Grotesk']"
               >
                 HIRE ME
               </motion.button>
