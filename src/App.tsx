@@ -289,7 +289,7 @@ const MobileNav = ({ current, setPage }: { current: Page, setPage: (p: Page) => 
 // --- Sections ---
 
 const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void, aboutImage: string | null, setPage: (p: Page) => void, cvUrl?: string | null }) => (
-  <section className="flex flex-col -mt-[10px] pt-12 md:pt-16 pb-16 md:pb-24 px-6 md:px-12 relative overflow-hidden bg-[#0B0F14]">
+  <section className="flex flex-col -mt-[21px] mb-0 pt-12 md:pt-16 pb-16 md:pb-24 px-6 md:px-12 relative overflow-hidden bg-[#0B0F14]">
     {/* Soft green lens flare glow */}
     <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-[rgba(183,227,106,0.12)] blur-[150px] rounded-full pointer-events-none" />
     <div className="absolute top-[20%] right-[-10%] w-[40%] h-[60%] bg-[rgba(183,227,106,0.06)] blur-[130px] rounded-full pointer-events-none" />
@@ -758,7 +758,7 @@ const BestWorksSection = ({
   return (
     <section className="py-16 md:py-24 px-6 md:px-12 max-w-7xl mx-auto space-y-12">
       <div className="flex justify-center text-center w-full relative">
-        <h2 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-[#F5F7FA] tracking-tight leading-none -letter-spacing-[0.03em] font-['Space_Grotesk']">
+        <h2 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-[#F5F7FA] tracking-tight leading-none -letter-spacing-[0.03em] font-['Space_Grotesk'] -mb-[37px] mt-0">
           BEST <span className="text-[#B7E36A]">WORKS</span>
         </h2>
         {isAdmin && (
@@ -1368,7 +1368,7 @@ const ReviewsSection = ({
   return (
     <section className="py-16 md:py-24 px-6 md:px-12 max-w-7xl mx-auto space-y-12">
       <header className="text-center">
-        <h2 className="text-4xl sm:text-6xl md:text-7xl font-bold text-white tracking-tight leading-none font-['Space_Grotesk']">
+        <h2 className="text-4xl sm:text-6xl md:text-7xl font-bold text-white tracking-tight leading-none font-['Space_Grotesk'] -mb-[39px]">
           REVIEW <span className="text-[#B7E36A]">ME</span>
         </h2>
       </header>
@@ -1476,11 +1476,11 @@ const ServicesSection = ({
   servicesData?: ServicePackage[];
 }) => {
   return (
-    <section className={`py-12 md:py-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto ${isHomepagePreview ? 'space-y-6 sm:space-y-8' : 'space-y-12'}`}>
+    <section className={`py-12 md:py-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto -mt-[50px] -mb-[55px] ${isHomepagePreview ? 'space-y-6 sm:space-y-8' : 'space-y-12'}`}>
       {/* Header */}
       {isHomepagePreview ? (
         <div className="flex justify-center text-center w-full relative">
-          <h2 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-[#F5F7FA] tracking-tight leading-none font-['Space_Grotesk']">
+          <h2 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-[#F5F7FA] tracking-tight leading-none font-['Space_Grotesk'] -mb-[37px]">
             MY <span className="text-[#B7E36A]">SERVICES</span>
           </h2>
         </div>
@@ -1596,15 +1596,15 @@ const ServicesSection = ({
 
       {/* Bottom Custom Offer Banner matching reference image on all views */}
       <div className={`bg-[#10151C] border border-white/10 rounded-2xl ${isHomepagePreview ? 'p-4 sm:p-5 mt-1' : 'p-5 sm:p-7'} flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 shadow-[0_15px_40px_rgba(0,0,0,0.4)]`}>
-        <div className="flex items-center gap-4 text-center sm:text-left">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
           <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#181E25] border border-white/10 flex items-center justify-center text-[#B7E36A] shrink-0 shadow-inner">
             <Headphones size={22} />
           </div>
-          <div>
-            <h4 className="text-[#F5F7FA] font-bold text-base font-['Space_Grotesk']">
+          <div className="text-center">
+            <h4 className="text-[#F5F7FA] font-bold text-base font-['Space_Grotesk'] text-center">
               Need something custom?
             </h4>
-            <p className="text-[#A9B1BB] text-xs sm:text-sm font-['Inter'] mt-0.5">
+            <p className="text-[#A9B1BB] text-xs sm:text-sm font-['Inter'] mt-0.5 text-center">
               Contact me for a personalized offer tailored to your project.
             </p>
           </div>
@@ -1651,13 +1651,22 @@ const ContactSection = ({
   };
 
   return (
-    <section className="py-12 md:py-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto bg-[#0B0F14] rounded-3xl border border-white/5 space-y-8">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
+    <section className="py-12 md:py-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto space-y-8 -mt-[47px] -mb-[73px]">
+      {/* Section Header */}
+      <div className="flex justify-center text-center w-full relative">
+        <h2 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-[#F5F7FA] tracking-tight leading-none font-['Space_Grotesk'] -mb-[24px]">
+          CONTACT <span className="text-[#B7E36A]">ME</span>
+        </h2>
+      </div>
+
+      {/* Main Contact Container Box */}
+      <div className="bg-[#0B0F14] rounded-3xl border border-white/5 p-6 sm:p-8 md:p-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
         
         {/* Left Column: Headline, Description, Contact Cards & Socials */}
-        <div className="lg:col-span-5 space-y-8 pl-2 sm:pl-4">
+        <div className="lg:col-span-5 space-y-6 lg:space-y-8 pl-0 lg:pl-4">
           
-          <div className="space-y-4">
+          <div className="hidden lg:flex space-y-4 text-center lg:text-left flex-col items-center lg:items-start">
             <div className="flex items-center gap-2 text-[#B7E36A] text-xs font-bold uppercase tracking-[0.2em] font-['Space_Grotesk']">
               <span>LET'S CONNECT</span>
               <span className="w-2.5 h-2.5 rounded-full bg-[#B7E36A] shadow-[0_0_10px_#B7E36A] inline-block animate-pulse" />
@@ -1674,7 +1683,7 @@ const ContactSection = ({
           </div>
 
           {/* Contact Information Cards */}
-          <div className="space-y-3.5 max-w-md">
+          <div className="space-y-3.5 max-w-md mx-auto lg:mx-0 w-full">
             {/* Email Card */}
             <div className="flex items-center gap-4 p-4 rounded-xl bg-[#10151C] border border-[#B7E36A]/10 hover:border-[#B7E36A]/30 transition-all duration-300 group">
               <div className="w-12 h-12 rounded-xl bg-[#181E25] border border-[#B7E36A]/30 flex items-center justify-center text-[#B7E36A] shadow-[0_0_12px_rgba(183,227,106,0.15)] shrink-0">
@@ -1759,7 +1768,8 @@ const ContactSection = ({
         </div>
 
         {/* Right Column: Contact Form Card */}
-        <div id="contact-form" className="lg:col-span-7 bg-[#181E25] border border-[#B7E36A]/20 p-6 sm:p-8 md:p-10 rounded-2xl md:rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+        <div className="lg:col-span-7">
+          <div id="contact-form" className="bg-[#181E25] border border-[#B7E36A]/20 p-6 sm:p-8 md:p-10 rounded-2xl md:rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
           {/* Subtle Accent Glow Backing */}
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#B7E36A]/5 blur-[90px] rounded-full pointer-events-none" />
 
@@ -1846,9 +1856,10 @@ const ContactSection = ({
             </motion.button>
           </form>
         </div>
-
       </div>
-    </section>
+    </div>
+  </div>
+</section>
   );
 };
 
@@ -4987,7 +4998,7 @@ export default function App() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F14]/90 via-[#0B0F14]/20 to-transparent z-15 pointer-events-none" />
 
                   {/* Signature graphic overlay */}
-                  <div className="absolute bottom-6 left-6 right-6 z-20 flex items-center justify-between pointer-events-none select-none">
+                  <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-6 z-20 flex items-center justify-end pointer-events-none select-none text-right">
                     <span className="font-caveat text-4xl sm:text-5xl text-[#B7E36A] font-bold tracking-wide drop-shadow-[0_2px_12px_rgba(183,227,106,0.6)]">
                       Abu Hanif
                     </span>
@@ -5147,7 +5158,7 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      <footer className="py-24 md:py-32 px-6 md:px-12 border-t border-[#B7E36A]/20 bg-[#0D1218] space-y-24">
+      <footer className="mt-[29px] py-24 md:py-32 px-6 md:px-12 border-t border-[#B7E36A]/20 bg-[#0D1218] space-y-24">
         <div className="max-w-7xl mx-auto w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-16 md:gap-12">
           {/* Col 1: About */}
           <div className="flex flex-col items-center md:items-start">
