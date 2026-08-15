@@ -3105,12 +3105,10 @@ export default function App() {
   const handleSelectPackage = (pkgName: string) => {
     setSelectedPackage(pkgName);
     setPage('contact');
+    window.scrollTo({ top: 0, behavior: 'instant' as any });
     setTimeout(() => {
-      const el = document.getElementById('contact-form');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
+      window.scrollTo({ top: 0, behavior: 'instant' as any });
+    }, 50);
   };
 
   const setPage = (newPage: Page) => {
