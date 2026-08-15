@@ -54,6 +54,7 @@ import {
   Headphones,
   Check,
   ChevronRight,
+  ChevronLeft,
   Sparkles,
   Edit3,
 } from 'lucide-react';
@@ -213,18 +214,11 @@ const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Pa
         className="flex items-center gap-3 text-[#B7E36A] font-extrabold text-xl md:text-2xl tracking-tight cursor-pointer hover:brightness-110 transition-all font-['Space_Grotesk']"
         onClick={() => setPage('home')}
       >
-        {logoUrl ? (
-          <img 
-            src={logoUrl} 
-            alt="Logo" 
-            referrerPolicy="no-referrer"
-            className="w-10 h-10 md:w-12 md:h-12 object-contain rounded-full border border-[#B7E36A]/30 bg-[#181E25]" 
-          />
-        ) : (
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#181E25] border border-[#B7E36A]/30 animate-pulse flex items-center justify-center shrink-0">
-            <div className="w-5 h-5 rounded-full bg-white/10" />
-          </div>
-        )}
+        <img 
+          src="https://wirshemphpkyyzpexzoa.supabase.co/storage/v1/object/public/Videos%20cover%20image/logo%20image.png" 
+          alt="Logo" 
+          className="h-10 w-auto bg-transparent object-contain" 
+        />
         ABU HANIF
       </motion.div>
       
@@ -480,7 +474,7 @@ const BestWorksSection = ({
   siteSettings: {
     clients: string | number;
     projects: string | number;
-    income: string | number;
+    hours: string | number;
   }
 }) => {
   const videoProjects = projects.filter(p => p.type === 'video');
@@ -1475,6 +1469,71 @@ const ServicesSection = ({
   setPage?: (p: Page) => void;
   servicesData?: ServicePackage[];
 }) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    let ticking = false;
+    const handleScrollUpdate = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (!container) return;
+          const scrollLeft = container.scrollLeft;
+          const containerCenter = scrollLeft + container.clientWidth / 2;
+          const children = Array.from(container.children) as HTMLElement[];
+          if (children.length === 0) return;
+
+          let closestIndex = 0;
+          let minDiff = Infinity;
+          children.forEach((child, idx) => {
+            const childCenter = child.offsetLeft + child.clientWidth / 2;
+            const diff = Math.abs(childCenter - containerCenter);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closestIndex = idx;
+            }
+          });
+          setActiveCardIndex(closestIndex);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    container.addEventListener('scroll', handleScrollUpdate, { passive: true });
+    return () => container.removeEventListener('scroll', handleScrollUpdate);
+  }, [servicesData]);
+
+  const scrollToCard = (index: number) => {
+    if (!scrollContainerRef.current) return;
+    const container = scrollContainerRef.current;
+    const children = Array.from(container.children) as HTMLElement[];
+    if (children[index]) {
+      const child = children[index];
+      const targetScroll = child.offsetLeft - (container.clientWidth - child.clientWidth) / 2;
+      container.scrollTo({
+        left: Math.max(0, targetScroll),
+        behavior: 'smooth'
+      });
+      setActiveCardIndex(index);
+    }
+  };
+
+  const handlePrev = () => {
+    if (activeCardIndex > 0) {
+      scrollToCard(activeCardIndex - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (activeCardIndex < servicesData.length - 1) {
+      scrollToCard(activeCardIndex + 1);
+    }
+  };
+
   return (
     <section className={`py-12 md:py-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto -mt-[50px] -mb-[55px] ${isHomepagePreview ? 'space-y-6 sm:space-y-8' : 'space-y-12'}`}>
       {/* Header */}
@@ -1507,7 +1566,10 @@ const ServicesSection = ({
       )}
 
       {/* Cards Container: STRICT SINGLE HORIZONTAL ROW ON ALL SCREENS */}
-      <div className="flex flex-row overflow-x-auto pb-8 pt-6 gap-6 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-[#B7E36A]/20 scrollbar-track-transparent w-full">
+      <div 
+        ref={scrollContainerRef}
+        className="flex flex-row overflow-x-auto pb-6 pt-6 gap-6 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-[#B7E36A]/20 scrollbar-track-transparent w-full"
+      >
         {servicesData.map((pkg) => {
           const isStandard = pkg.isPopular;
           const isSelected = selectedPackage
@@ -1593,6 +1655,46 @@ const ServicesSection = ({
           );
         })}
       </div>
+
+      {/* Mobile Swipe Navigation Controls - Centered outside cards */}
+      {servicesData.length > 1 && (
+        <div className="md:hidden flex items-center justify-center -mt-2 mb-2">
+          <div className="inline-flex items-center justify-between w-24 h-9 bg-[#181E25]/90 backdrop-blur-md border border-white/15 px-2.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.5),0_0_15px_rgba(183,227,106,0.12)] font-['Space_Grotesk'] text-xs font-bold select-none transition-all">
+            {/* Left Chevron (when not on first card, with layout-stable invisible placeholder) */}
+            {activeCardIndex > 0 ? (
+              <button
+                type="button"
+                onClick={handlePrev}
+                aria-label="Previous Service"
+                className="w-6 h-6 flex items-center justify-center text-[#B7E36A] hover:text-[#C8F27A] active:scale-90 transition-transform cursor-pointer"
+              >
+                <ChevronLeft size={16} strokeWidth={2.5} />
+              </button>
+            ) : (
+              <div className="w-6 h-6 invisible" aria-hidden="true" />
+            )}
+
+            {/* Current Page Number */}
+            <span className="text-[#F5F7FA] font-extrabold px-1 tracking-wider text-sm font-['Space_Grotesk'] text-center">
+              {activeCardIndex + 1}
+            </span>
+
+            {/* Right Chevron (when not on last card, with layout-stable invisible placeholder) */}
+            {activeCardIndex < servicesData.length - 1 ? (
+              <button
+                type="button"
+                onClick={handleNext}
+                aria-label="Next Service"
+                className="w-6 h-6 flex items-center justify-center text-[#B7E36A] hover:text-[#C8F27A] active:scale-90 transition-transform cursor-pointer"
+              >
+                <ChevronRight size={16} strokeWidth={2.5} />
+              </button>
+            ) : (
+              <div className="w-6 h-6 invisible" aria-hidden="true" />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Bottom Custom Offer Banner matching reference image on all views */}
       <div className={`bg-[#10151C] border border-white/10 rounded-2xl ${isHomepagePreview ? 'p-4 sm:p-5 mt-1' : 'p-5 sm:p-7'} flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 shadow-[0_15px_40px_rgba(0,0,0,0.4)]`}>
@@ -2775,7 +2877,7 @@ const Portfolio = ({
                           src={logoUrl} 
                           alt="Logo Preview" 
                           referrerPolicy="no-referrer"
-                          className="w-24 h-24 md:w-32 md:h-32 object-contain rounded-full bg-black border border-white/10" 
+                          className="h-24 w-auto object-contain bg-transparent" 
                         />
                         <button 
                           onClick={async () => {
@@ -3078,7 +3180,7 @@ export default function App() {
   const [aboutImage, setAboutImage] = useState<string | null>(null);
   const [homeImageUrl, setHomeImageUrl] = useState<string | null>(null);
   const [aboutImageUrl, setAboutImageUrl] = useState<string | null>(null);
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>("https://wirshemphpkyyzpexzoa.supabase.co/storage/v1/object/public/Videos%20cover%20image/logo%20image.png");
   const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [bestWorks, setBestWorks] = useState<string[]>([]);
   const [activeVideo, setActiveVideo] = useState<string | Blob | null>(null);
@@ -3208,11 +3310,11 @@ export default function App() {
   const [siteSettings, setSiteSettings] = useState<{
     clients: string | number;
     projects: string | number;
-    income: string | number;
+    hours: string | number;
   }>({
-    clients: 5,
-    projects: 50,
-    income: 200
+    clients: '05',
+    projects: '56',
+    hours: '200'
   });
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -3608,9 +3710,12 @@ export default function App() {
 
     // Apply fetched values or print final error logs
     if (fetchedRow) {
-      const clientsVal = getCaseInsensitiveProp(fetchedRow, 'clients');
-      const projectsVal = getCaseInsensitiveProp(fetchedRow, 'projects');
-      const incomeVal = getCaseInsensitiveProp(fetchedRow, 'income');
+      const clientsVal = getCaseInsensitiveProp(fetchedRow, 'clients') ?? getCaseInsensitiveProp(fetchedRow, 'happy_clients');
+      const projectsVal = getCaseInsensitiveProp(fetchedRow, 'projects') ?? getCaseInsensitiveProp(fetchedRow, 'completed_projects');
+      const hoursVal = getCaseInsensitiveProp(fetchedRow, 'hours') ?? 
+                       getCaseInsensitiveProp(fetchedRow, 'total_hours') ?? 
+                       getCaseInsensitiveProp(fetchedRow, 'income') ?? 
+                       getCaseInsensitiveProp(fetchedRow, 'total_income');
       const faviconVal = getCaseInsensitiveProp(fetchedRow, 'favicon_url') ||
                          getCaseInsensitiveProp(fetchedRow, 'favicon') ||
                          getCaseInsensitiveProp(fetchedRow, 'favicon_link') ||
@@ -3625,7 +3730,7 @@ export default function App() {
       const aboutVal = getCaseInsensitiveProp(fetchedRow, 'about_image_url') ||
                        getCaseInsensitiveProp(fetchedRow, 'about_image');
 
-      console.log("[Supabase Settings] Extracted case-insensitive values:", { clientsVal, projectsVal, incomeVal, faviconVal, ogVal, logoVal });
+      console.log("[Supabase Settings] Extracted case-insensitive values:", { clientsVal, projectsVal, hoursVal, faviconVal, ogVal, logoVal });
 
       const favToUse = faviconVal || logoVal || homeVal;
       if (favToUse && typeof favToUse === 'string' && favToUse.trim() !== '') {
@@ -3645,9 +3750,9 @@ export default function App() {
       }
 
       setSiteSettings({
-        clients: clientsVal !== undefined && clientsVal !== null ? clientsVal : 5,
-        projects: projectsVal !== undefined && projectsVal !== null ? projectsVal : 50,
-        income: incomeVal !== undefined && incomeVal !== null ? incomeVal : 200
+        clients: clientsVal !== undefined && clientsVal !== null ? clientsVal : '05',
+        projects: projectsVal !== undefined && projectsVal !== null ? projectsVal : '56',
+        hours: hoursVal !== undefined && hoursVal !== null ? hoursVal : '200'
       });
     } else {
       console.error(
