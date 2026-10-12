@@ -1,0 +1,240 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 420" width="100%" height="100%" fill="none">
+  <defs>
+    <!-- Background Ambient Glow Filter -->
+    <filter id="ambient-cyan-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- 3D Depth Drop Shadow -->
+    <filter id="deep-shadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#030A14" flood-opacity="0.9" />
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#00E5FF" flood-opacity="0.25" />
+    </filter>
+
+    <!-- Text 3D Chrome Shadow -->
+    <filter id="text-3d-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.85" />
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#FFFFFF" flood-opacity="0.4" result="highlight" />
+    </filter>
+
+    <!-- Emblem Cyan to Deep Blue Vertical Gradient -->
+    <linearGradient id="emblem-body-grad" x1="200" y1="20" x2="200" y2="295" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#70F0FF" />
+      <stop offset="12%" stop-color="#26D6FF" />
+      <stop offset="30%" stop-color="#00AEEF" />
+      <stop offset="55%" stop-color="#0072CE" />
+      <stop offset="80%" stop-color="#0B3C9B" />
+      <stop offset="100%" stop-color="#061E58" />
+    </linearGradient>
+
+    <!-- Diagonal Over-pass Ribbon Gradient -->
+    <linearGradient id="diag-ribbon-grad" x1="140" y1="90" x2="260" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4CE8FF" />
+      <stop offset="35%" stop-color="#00B8F5" />
+      <stop offset="70%" stop-color="#0066C0" />
+      <stop offset="100%" stop-color="#092E7A" />
+    </linearGradient>
+
+    <!-- Outer Chrome Metallic Rim Gradient -->
+    <linearGradient id="chrome-rim-grad" x1="60" y1="30" x2="340" y2="290" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="20%" stop-color="#B6F3FF" />
+      <stop offset="40%" stop-color="#1482D2" />
+      <stop offset="60%" stop-color="#062C6E" />
+      <stop offset="80%" stop-color="#E1F8FF" />
+      <stop offset="100%" stop-color="#081836" />
+    </linearGradient>
+
+    <!-- Inner Specular Ridge Gradient -->
+    <linearGradient id="specular-ridge" x1="200" y1="20" x2="200" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+      <stop offset="50%" stop-color="#70F0FF" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#00AEEF" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Silver 3D Text Metallic Face -->
+    <linearGradient id="silver-face-grad" x1="200" y1="330" x2="200" y2="395" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="15%" stop-color="#F1F5F9" />
+      <stop offset="48%" stop-color="#CBD5E1" />
+      <stop offset="52%" stop-color="#94A3B8" />
+      <stop offset="85%" stop-color="#E2E8F0" />
+      <stop offset="100%" stop-color="#64748B" />
+    </linearGradient>
+
+    <!-- Silver Text Bevel Outline -->
+    <linearGradient id="silver-bevel-stroke" x1="200" y1="330" x2="200" y2="395" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="45%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+
+    <!-- Soft Ambient Halo behind the emblem -->
+    <radialGradient id="emblem-halo" cx="200" cy="155" r="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.18" />
+      <stop offset="50%" stop-color="#0072CE" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Ambient Ethereal Glow Backplate -->
+  <circle cx="200" cy="155" r="160" fill="url(#emblem-halo)" />
+
+  <!-- MAIN EMBLEM GROUP (FILTERED WITH DROP SHADOW) -->
+  <g filter="url(#deep-shadow)">
+    
+    <!-- BASE METALLIC RIM / BACK-SHADOW LAYER -->
+    <!-- Left Infinity Wing Outer Shell -->
+    <path 
+      d="M 142 62 C 90 62 46 102 46 156 C 46 210 90 250 142 250 C 172 250 192 232 208 206 C 224 232 244 250 274 250 C 326 250 370 210 370 156 C 370 102 326 62 274 62 C 244 62 224 80 208 106 C 192 80 172 62 142 62 Z" 
+      fill="none" 
+      stroke="url(#chrome-rim-grad)" 
+      stroke-width="14" 
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+
+    <!-- Left Pillar Outer Shell -->
+    <path 
+      d="M 142 24 C 142 24 135 44 125 54 L 125 258 C 135 268 142 288 142 288 C 142 288 149 268 159 258 L 159 54 C 149 44 142 24 142 24 Z"
+      fill="#051532"
+      stroke="url(#chrome-rim-grad)"
+      stroke-width="12"
+      stroke-linejoin="round"
+    />
+
+    <!-- Right Pillar Outer Shell -->
+    <path 
+      d="M 274 24 C 274 24 267 44 257 54 L 257 258 C 267 268 274 288 274 288 C 274 288 281 268 291 258 L 291 54 C 281 44 274 24 274 24 Z"
+      fill="#051532"
+      stroke="url(#chrome-rim-grad)"
+      stroke-width="12"
+      stroke-linejoin="round"
+    />
+
+    <!-- MAIN BODY COLOR FILL & INNER CONTOURS -->
+    <!-- Left Loop Body -->
+    <path 
+      d="M 142 74 C 98 74 62 108 62 156 C 62 204 98 238 142 238 C 170 238 190 220 206 195 L 188 174 C 176 193 160 206 142 206 C 114 206 92 184 92 156 C 92 128 114 106 142 106 C 160 106 176 119 188 138 L 206 117 C 190 92 170 74 142 74 Z" 
+      fill="url(#emblem-body-grad)" 
+    />
+
+    <!-- Right Loop Body -->
+    <path 
+      d="M 274 74 C 302 74 322 92 338 117 L 320 138 C 308 119 292 106 274 106 C 246 106 224 128 224 156 C 224 184 246 206 274 206 C 292 206 308 193 320 174 L 338 195 C 322 220 302 238 274 238 C 230 238 194 204 194 156 C 194 108 230 74 274 74 Z" 
+      fill="url(#emblem-body-grad)" 
+    />
+
+    <!-- Left Vertical Pillar Body -->
+    <path 
+      d="M 142 28 C 142 28 136 46 128 55 L 128 257 C 136 266 142 284 142 284 C 142 284 148 266 156 257 L 156 55 C 148 46 142 28 142 28 Z"
+      fill="url(#emblem-body-grad)"
+      stroke="url(#chrome-rim-grad)"
+      stroke-width="2.5"
+    />
+
+    <!-- Right Vertical Pillar Body -->
+    <path 
+      d="M 274 28 C 274 28 268 46 260 55 L 260 257 C 268 266 274 284 274 284 C 274 284 280 266 288 257 L 288 55 C 280 46 274 28 274 28 Z"
+      fill="url(#emblem-body-grad)"
+      stroke="url(#chrome-rim-grad)"
+      stroke-width="2.5"
+    />
+
+    <!-- Center Diagonal Crossbar (Weaving Over the Center) -->
+    <!-- Drop Shadow cast by the overpass ribbon -->
+    <path 
+      d="M 136 108 L 254 224 L 272 206 L 154 90 Z" 
+      fill="#030E20" 
+      opacity="0.65" 
+      transform="translate(4, 6)"
+    />
+
+    <!-- Overpass Ribbon Surface -->
+    <path 
+      d="M 136 108 L 254 224 L 272 206 L 154 90 Z" 
+      fill="url(#diag-ribbon-grad)" 
+      stroke="url(#chrome-rim-grad)" 
+      stroke-width="2.5" 
+    />
+
+    <!-- Specular Highlight Sheen along the diagonal ribbon -->
+    <line 
+      x1="145" y1="99" 
+      x2="263" y2="215" 
+      stroke="#FFFFFF" 
+      stroke-width="3" 
+      stroke-linecap="round" 
+      opacity="0.8" 
+    />
+
+    <!-- SPECULAR CHROME HIGHLIGHT LINES & ACCENTS -->
+    <!-- Top Left Arch Specular Light -->
+    <path 
+      d="M 80 130 C 88 95 116 78 142 78" 
+      fill="none" 
+      stroke="url(#specular-ridge)" 
+      stroke-width="4.5" 
+      stroke-linecap="round" 
+    />
+    <!-- Top Right Arch Specular Light -->
+    <path 
+      d="M 336 130 C 328 95 300 78 274 78" 
+      fill="none" 
+      stroke="url(#specular-ridge)" 
+      stroke-width="4.5" 
+      stroke-linecap="round" 
+    />
+
+    <!-- Left Pillar Highlight Ridge -->
+    <line x1="142" y1="36" x2="142" y2="150" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.85" />
+    <line x1="142" y1="150" x2="142" y2="275" stroke="#70F0FF" stroke-width="1.8" stroke-linecap="round" opacity="0.45" />
+
+    <!-- Right Pillar Highlight Ridge -->
+    <line x1="274" y1="36" x2="274" y2="150" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.85" />
+    <line x1="274" y1="150" x2="274" y2="275" stroke="#70F0FF" stroke-width="1.8" stroke-linecap="round" opacity="0.45" />
+
+    <!-- Pillar Decorative Notches / Diamond Insets (Matching reference logo styling) -->
+    <polygon points="142,150 147,156 142,162 137,156" fill="#FFFFFF" opacity="0.9" />
+    <polygon points="274,150 279,156 274,162 269,156" fill="#FFFFFF" opacity="0.9" />
+  </g>
+
+  <!-- TYPOGRAPHY: 3D METALLIC CHROME "Hanifinity" -->
+  <g filter="url(#text-3d-shadow)">
+    <!-- Main Hanifinity 3D Letterforms -->
+    <text 
+      x="200" 
+      y="382" 
+      text-anchor="middle" 
+      font-family="'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+      font-size="52" 
+      font-weight="800" 
+      letter-spacing="2.5" 
+      fill="url(#silver-face-grad)" 
+      stroke="url(#silver-bevel-stroke)" 
+      stroke-width="1.5"
+      paint-order="stroke fill"
+    >
+      Hanifinity
+    </text>
+
+    <!-- Top Metallic Specular Gleam Overlay -->
+    <text 
+      x="200" 
+      y="382" 
+      text-anchor="middle" 
+      font-family="'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+      font-size="52" 
+      font-weight="800" 
+      letter-spacing="2.5" 
+      fill="none" 
+      stroke="#FFFFFF" 
+      stroke-width="0.8"
+      stroke-dasharray="12 18"
+      opacity="0.85"
+    >
+      Hanifinity
+    </text>
+  </g>
+</svg>

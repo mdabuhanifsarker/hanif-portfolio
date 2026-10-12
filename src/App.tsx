@@ -95,6 +95,100 @@ interface ProjectItem {
   createdAt?: string | number;
 }
 
+export interface SocialLinkRecord {
+  id?: string | number;
+  name: string;
+  link: string;
+  created_at?: string;
+}
+
+// Helper to resolve Supabase Dashboard preview/bucket URLs and paths to valid public storage URLs
+export function resolveSupabaseStorageUrl(rawUrl: string | null | undefined, defaultBucket = 'Videos cover image'): string | null {
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return null;
+
+  // Supabase Dashboard preview/bucket URL
+  // e.g. https://supabase.com/dashboard/project/wirshemphpkyyzpexzoa/storage/files/buckets/Videos%20cover%20image?preview=Hanifinity-logo-400w.png
+  // e.g. https://supabase.com/dashboard/project/wirshemphpkyyzpexzoa/storage/buckets/Videos%20cover%20image/Hanifinity-logo-400w.png
+  if (trimmed.includes('supabase.com/dashboard/project/')) {
+    try {
+      const urlObj = new URL(trimmed);
+      const previewParam = urlObj.searchParams.get('preview');
+      const pathMatch = urlObj.pathname.match(/\/storage\/(?:files\/)?buckets\/([^/?]+)(?:\/(.+))?/);
+      
+      const bucket = pathMatch && pathMatch[1] ? decodeURIComponent(pathMatch[1]) : defaultBucket;
+      const filename = previewParam || (pathMatch && pathMatch[2] ? decodeURIComponent(pathMatch[2]) : '');
+      
+      if (filename) {
+        const { data } = supabaseClient.storage.from(bucket).getPublicUrl(filename);
+        if (data?.publicUrl) {
+          return data.publicUrl;
+        }
+        return `${SUPABASE_URL}/storage/v1/object/public/${encodeURIComponent(bucket)}/${encodeURIComponent(filename)}`;
+      }
+    } catch (e) {
+      console.warn("Failed to parse dashboard storage URL:", e);
+    }
+  }
+
+  // Direct public URL or data URI
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
+    return trimmed;
+  }
+
+  // Bare file name or path within storage bucket
+  const { data } = supabaseClient.storage.from(defaultBucket).getPublicUrl(trimmed);
+  if (data?.publicUrl) {
+    return data.publicUrl;
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/${encodeURIComponent(defaultBucket)}/${encodeURIComponent(trimmed)}`;
+}
+
+// Safely map lowercase platform name or URL to its matching icon and metadata
+export function mapSocialPlatform(name: string, url: string = '') {
+  const n = (name || '').toLowerCase().trim();
+  const u = (url || '').toLowerCase().trim();
+
+  // Dribbble support (matching lowercase name "dribbble")
+  if (n === 'dribbble' || n.includes('dribbble') || n === 'dribble' || n.includes('dribble') || u.includes('dribbble.com')) {
+    return { platform: 'dribbble', label: 'Dribbble', Icon: FaDribbble, color: '#EA4C89' };
+  }
+  // Facebook
+  if (n === 'facebook' || n.includes('facebook') || n === 'fb' || u.includes('facebook.com') || u.includes('fb.me')) {
+    return { platform: 'facebook', label: 'Facebook', Icon: FaFacebook, color: '#1877F2' };
+  }
+  // Instagram
+  if (n === 'instagram' || n.includes('instagram') || n === 'insta' || n === 'ig' || u.includes('instagram.com')) {
+    return { platform: 'instagram', label: 'Instagram', Icon: FaInstagram, color: '#E4405F' };
+  }
+  // YouTube
+  if (n === 'youtube' || n.includes('youtube') || n === 'yt' || u.includes('youtube.com') || u.includes('youtu.be')) {
+    return { platform: 'youtube', label: 'YouTube', Icon: FaYoutube, color: '#FF0000' };
+  }
+  // LinkedIn
+  if (n === 'linkedin' || n.includes('linkedin') || u.includes('linkedin.com')) {
+    return { platform: 'linkedin', label: 'LinkedIn', Icon: FaLinkedin, color: '#0A66C2' };
+  }
+  // Pinterest
+  if (n === 'pinterest' || n.includes('pinterest') || u.includes('pinterest.com') || u.includes('pin.it')) {
+    return { platform: 'pinterest', label: 'Pinterest', Icon: FaPinterest, color: '#BD081C' };
+  }
+  // Behance
+  if (n === 'behance' || n.includes('behance') || u.includes('behance.net')) {
+    return { platform: 'behance', label: 'Behance', Icon: FaBehance, color: '#0057FF' };
+  }
+  // GitHub
+  if (n === 'github' || n.includes('github') || u.includes('github.com')) {
+    return { platform: 'github', label: 'GitHub', Icon: FaGithub, color: '#FFFFFF' };
+  }
+  // Telegram
+  if (n === 'telegram' || n.includes('telegram') || n === 'tg' || u.includes('t.me') || u.includes('telegram.me')) {
+    return { platform: 'telegram', label: 'Telegram', Icon: FaTelegramPlane, color: '#26A5E4' };
+  }
+  return null;
+}
+
 function getYouTubeThumbnail(url: string | Blob | undefined | null) {
   if (!url || typeof url !== 'string') return null;
   const id = getYouTubeId(url);
@@ -214,11 +308,13 @@ const Navbar = ({ currentPage, setPage, onOpenMenu, logoUrl }: { currentPage: Pa
         className="flex items-center gap-3 text-[#B7E36A] font-extrabold text-xl md:text-2xl tracking-tight cursor-pointer hover:brightness-110 transition-all font-['Space_Grotesk']"
         onClick={() => setPage('home')}
       >
-        <img 
-          src="https://wirshemphpkyyzpexzoa.supabase.co/storage/v1/object/public/Videos%20cover%20image/logo%20image.png" 
-          alt="Logo" 
-          className="h-10 w-auto bg-transparent object-contain" 
-        />
+        {logoUrl && (
+          <img 
+            src={logoUrl} 
+            alt="Logo" 
+            className="h-10 w-auto bg-transparent object-contain" 
+          />
+        )}
         ABU HANIF
       </motion.div>
       
@@ -282,7 +378,30 @@ const MobileNav = ({ current, setPage }: { current: Page, setPage: (p: Page) => 
 
 // --- Sections ---
 
-const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void, aboutImage: string | null, setPage: (p: Page) => void, cvUrl?: string | null }) => (
+const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl, socialLinks = [] }: { onAboutMe: () => void, aboutImage: string | null, setPage: (p: Page) => void, cvUrl?: string | null, socialLinks?: SocialLinkRecord[] }) => {
+  const heroSocialList = useMemo(() => {
+    if (socialLinks && socialLinks.length > 0) {
+      return socialLinks
+        .map((item, idx) => {
+          const mapped = mapSocialPlatform(item.name, item.link);
+          if (!mapped || !item.link) return null;
+          let safeUrl = item.link.trim();
+          if (!safeUrl.startsWith('http://') && !safeUrl.startsWith('https://') && !safeUrl.startsWith('mailto:') && !safeUrl.startsWith('tel:')) {
+            safeUrl = `https://${safeUrl}`;
+          }
+          return {
+            id: item.id ?? idx,
+            link: safeUrl,
+            Icon: mapped.Icon,
+            color: mapped.color
+          };
+        })
+        .filter(Boolean) as Array<{ id: string | number; link: string; Icon: any; color: string }>;
+    }
+    return [];
+  }, [socialLinks]);
+
+  return (
   <section className="flex flex-col -mt-[21px] mb-0 pt-12 md:pt-16 pb-16 md:pb-24 px-6 md:px-12 relative overflow-hidden bg-[#0B0F14]">
     {/* Soft green lens flare glow */}
     <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-[rgba(183,227,106,0.12)] blur-[150px] rounded-full pointer-events-none" />
@@ -359,37 +478,33 @@ const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void
         </div>
 
         {/* Social Icons list with glossy look */}
-        <div className="flex gap-3 pt-4">
-          {[
-            { Icon: FaYoutube, link: "https://www.youtube.com/@Abu_Hanif_Sarker", color: "#FF0000" },
-            { Icon: FaFacebook, link: "https://www.facebook.com/profile.php?id=61592538396121", color: "#1877F2" },
-            { Icon: FaBehance, link: "https://www.behance.net/mdabuhanifsarker", color: "#0057FF" },
-            { Icon: FaLinkedin, link: "https://www.linkedin.com/in/mdabuhanifsarker/", color: "#0077B5" },
-            { Icon: Mail, link: "mailto:mdabuhanifsarker91@gmail.com", color: "#EA4335" }
-          ].map((social, idx) => (
-            <motion.a 
-              key={idx}
-              href={social.link}
-              target="_blank"
-              rel="noreferrer"
-              whileHover={{ 
-                y: -3, 
-                scale: 1.1, 
-                borderColor: social.color,
-                boxShadow: `0 0 15px ${social.color}40`,
-                backgroundColor: `${social.color}10`
-              }}
-              whileTap={{ scale: 0.95 }}
-              className="w-10 h-10 rounded-full flex items-center justify-center bg-[#070C15]/90 border transition-all duration-150 shadow-md cursor-pointer"
-              style={{ 
-                borderColor: `${social.color}33`,
-                color: social.color 
-              }}
-            >
-              <social.Icon size={16} />
-            </motion.a>
-          ))}
-        </div>
+        {heroSocialList.length > 0 && (
+          <div className="flex gap-3 pt-4">
+            {heroSocialList.map((social) => (
+              <motion.a 
+                key={social.id}
+                href={social.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ 
+                  y: -3, 
+                  scale: 1.1, 
+                  borderColor: social.color,
+                  boxShadow: `0 0 15px ${social.color}40`,
+                  backgroundColor: `${social.color}10`
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-[#070C15]/90 border transition-all duration-150 shadow-md cursor-pointer"
+                style={{ 
+                  borderColor: `${social.color}33`,
+                  color: social.color 
+                }}
+              >
+                <social.Icon size={16} />
+              </motion.a>
+            ))}
+          </div>
+        )}
       </motion.div>
 
       {/* Advanced rotating circular viewfinder with handwriting signature overlay */}
@@ -444,7 +559,8 @@ const Hero = ({ onAboutMe, aboutImage, setPage, cvUrl }: { onAboutMe: () => void
       </motion.div>
     </div>
   </section>
-);
+  );
+};
 
 const BestWorksSection = ({ 
   isAdmin,
@@ -549,9 +665,16 @@ const BestWorksSection = ({
     let itemA = videoList[chosenPair[0]];
     let itemB = videoList[chosenPair[1]];
 
-    // 50% chance to swap order
-    if (Math.random() < 0.5) {
-      [itemA, itemB] = [itemB, itemA];
+    // If only 1 pair exists in pool, alternate order so it visibly refreshes each cycle
+    if (pairs.length === 1) {
+      if (prevPairIdsRef.current[0] === itemA.id) {
+        [itemA, itemB] = [itemB, itemA];
+      }
+    } else {
+      // 50% chance to swap order
+      if (Math.random() < 0.5) {
+        [itemA, itemB] = [itemB, itemA];
+      }
     }
 
     prevPairIdsRef.current = [itemA.id, itemB.id];
@@ -562,7 +685,7 @@ const BestWorksSection = ({
     return pickRandomPair(videoProjects);
   });
 
-  // Timer to automatically rotate 2 random videos every 1 minute (60,000ms)
+  // Timer to automatically rotate 2 random videos every 3 seconds (3,000ms)
   useEffect(() => {
     if (prevVideoIdsKeyRef.current !== videoIdsKey) {
       prevVideoIdsKeyRef.current = videoIdsKey;
@@ -571,7 +694,7 @@ const BestWorksSection = ({
 
     const intervalId = setInterval(() => {
       setDisplayProjects(pickRandomPair(videoProjectsRef.current));
-    }, 60000);
+    }, 3000);
 
     return () => clearInterval(intervalId);
   }, [videoIdsKey, pickRandomPair]);
@@ -1728,14 +1851,44 @@ const ContactSection = ({
   handleEmailSubmit,
   isSending = false,
   selectedPackage,
-  setSelectedPackage
+  setSelectedPackage,
+  socialLinks = []
 }: { 
   handleEmailSubmit: (e: React.FormEvent<HTMLFormElement>) => void,
   isSending?: boolean,
   selectedPackage?: string | null,
-  setSelectedPackage?: (pkg: string | null) => void
+  setSelectedPackage?: (pkg: string | null) => void,
+  socialLinks?: SocialLinkRecord[]
 }) => {
   const [subjectValue, setSubjectValue] = useState(selectedPackage ? `Service: ${selectedPackage} Package` : '');
+
+  const mappedSocialLinks = useMemo(() => {
+    if (socialLinks && socialLinks.length > 0) {
+      return socialLinks
+        .map((item, idx) => {
+          const mapped = mapSocialPlatform(item.name, item.link);
+          if (!mapped || !item.link) return null;
+          let safeUrl = item.link.trim();
+          if (!safeUrl.startsWith('http://') && !safeUrl.startsWith('https://') && !safeUrl.startsWith('mailto:') && !safeUrl.startsWith('tel:')) {
+            safeUrl = `https://${safeUrl}`;
+          }
+          return {
+            id: item.id ?? idx,
+            url: safeUrl,
+            ...mapped
+          };
+        })
+        .filter(Boolean) as Array<{
+          id: string | number;
+          url: string;
+          platform: string;
+          label: string;
+          Icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
+          color: string;
+        }>;
+    }
+    return [];
+  }, [socialLinks]);
 
   useEffect(() => {
     if (selectedPackage) {
@@ -1842,30 +1995,25 @@ const ContactSection = ({
           </div>
 
           {/* Social Icons Row - Centered on Mobile */}
-          <div className="flex flex-wrap justify-center sm:justify-start gap-3 pt-2">
-            {[
-              { Icon: FaFacebook, url: 'https://www.facebook.com/profile.php?id=61592538396121' },
-              { Icon: FaInstagram, url: 'https://www.instagram.com/editor_abu.hanif/' },
-              { Icon: FaYoutube, url: 'https://www.youtube.com/@Abu_Hanif_Sarker' },
-              { Icon: FaLinkedin, url: 'https://www.linkedin.com/in/mdabuhanifsarker/' },
-              { Icon: FaPinterest, url: 'https://www.pinterest.com/mdabuhanifsarker' },
-              { Icon: FaBehance, url: 'https://www.behance.net/mdabuhanifsarker' },
-              { Icon: FaGithub, url: 'https://github.com/mdabuhanifsarker' },
-              { Icon: FaTelegramPlane, url: 'https://t.me/mdabuhanifsarker' },
-            ].map((social, i) => (
-              <motion.a
-                key={i}
-                href={social.url}
-                target="_blank"
-                rel="noreferrer"
-                whileHover={{ y: -2, scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-11 h-11 rounded-xl bg-[#181E25] border border-white/10 hover:border-[#B7E36A]/50 text-[#B7E36A] hover:text-[#C8F27A] flex items-center justify-center transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.3)] hover:shadow-[0_0_20px_rgba(183,227,106,0.25)]"
-              >
-                <social.Icon size={18} />
-              </motion.a>
-            ))}
-          </div>
+          {mappedSocialLinks.length > 0 && (
+            <div className="flex flex-wrap justify-center sm:justify-start gap-3 pt-2">
+              {mappedSocialLinks.map((social) => (
+                <motion.a
+                  key={social.id}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ y: -2, scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-11 h-11 rounded-xl bg-[#181E25] border border-white/10 hover:border-[#B7E36A]/50 text-[#B7E36A] hover:text-[#C8F27A] flex items-center justify-center transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.3)] hover:shadow-[0_0_20px_rgba(183,227,106,0.25)]"
+                  aria-label={social.label}
+                  title={social.label}
+                >
+                  <social.Icon size={18} />
+                </motion.a>
+              ))}
+            </div>
+          )}
 
         </div>
 
@@ -3178,10 +3326,34 @@ export default function App() {
   const [aboutImage, setAboutImage] = useState<string | null>(null);
   const [homeImageUrl, setHomeImageUrl] = useState<string | null>(null);
   const [aboutImageUrl, setAboutImageUrl] = useState<string | null>(null);
-  const [logoUrl, setLogoUrl] = useState<string | null>("https://wirshemphpkyyzpexzoa.supabase.co/storage/v1/object/public/Videos%20cover%20image/logo%20image.png");
+  const [logoUrl, setLogoUrl] = useState<string | null>(() => {
+    return resolveSupabaseStorageUrl("https://supabase.com/dashboard/project/wirshemphpkyyzpexzoa/storage/files/buckets/Videos%20cover%20image?preview=Hanifinity-logo-400w.png");
+  });
+  const [socialLinks, setSocialLinks] = useState<SocialLinkRecord[]>([]);
   const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [bestWorks, setBestWorks] = useState<string[]>([]);
   const [activeVideo, setActiveVideo] = useState<string | Blob | null>(null);
+
+  const footerSocialLinks = useMemo(() => {
+    if (socialLinks && socialLinks.length > 0) {
+      return socialLinks
+        .map((item, idx) => {
+          const mapped = mapSocialPlatform(item.name, item.link);
+          if (!mapped || !item.link) return null;
+          let safeUrl = item.link.trim();
+          if (!safeUrl.startsWith('http://') && !safeUrl.startsWith('https://') && !safeUrl.startsWith('mailto:') && !safeUrl.startsWith('tel:')) {
+            safeUrl = `https://${safeUrl}`;
+          }
+          return {
+            id: item.id ?? idx,
+            url: safeUrl,
+            ...mapped
+          };
+        })
+        .filter(Boolean) as Array<{ id: string | number; url: string; platform: string; label: string; Icon: any; color: string }>;
+    }
+    return [];
+  }, [socialLinks]);
 
   const savedScrollY = useRef<number>(0);
   const pushedModalState = useRef<boolean>(false);
@@ -3737,7 +3909,8 @@ export default function App() {
       }
 
       if (logoVal && typeof logoVal === 'string' && logoVal.trim() !== '') {
-        setLogoUrl(logoVal.trim());
+        const resolvedLogo = resolveSupabaseStorageUrl(logoVal.trim());
+        setLogoUrl(resolvedLogo || logoVal.trim());
       }
       if (homeVal && typeof homeVal === 'string' && homeVal.trim() !== '') {
         setHomeImageUrl(homeVal.trim());
@@ -3923,28 +4096,36 @@ export default function App() {
 
       console.log("[Supabase Assets] Extracted case-insensitive values:", { logoVal, homeVal, aboutVal, cvVal, faviconVal, ogVal });
 
-      const favToUse = faviconVal || logoVal || homeVal;
+      const resolvedLogo = resolveSupabaseStorageUrl(logoVal);
+      const resolvedHome = resolveSupabaseStorageUrl(homeVal);
+      const resolvedAbout = resolveSupabaseStorageUrl(aboutVal);
+      const resolvedCv = resolveSupabaseStorageUrl(cvVal);
+      const resolvedFavicon = resolveSupabaseStorageUrl(faviconVal);
+
+      const favToUse = resolvedFavicon || resolvedLogo || resolvedHome;
       if (favToUse && typeof favToUse === 'string' && favToUse.trim() !== '') {
         console.log("[Supabase Assets Success] Updating document head assets:", favToUse.trim());
-        updateFaviconInHead(favToUse.trim(), ogVal || logoVal || homeVal);
+        updateFaviconInHead(favToUse.trim(), ogVal || resolvedLogo || resolvedHome);
       }
 
-      if (logoVal && logoVal.trim() !== "") {
-        console.log("[Supabase Assets Success] Fetched latest logo_url from Supabase site_assets:", logoVal.trim());
+      if (resolvedLogo && resolvedLogo.trim() !== "") {
+        console.log("[Supabase Assets Success] Fetched latest logo_url from Supabase site_assets:", resolvedLogo.trim());
+        setLogoUrl(resolvedLogo.trim());
+      } else if (logoVal && logoVal.trim() !== "") {
         setLogoUrl(logoVal.trim());
       } else {
         console.warn("[Supabase Assets Warning] logo_url is empty or missing in the site_assets table row.");
       }
-      if (cvVal && cvVal.trim() !== "") {
-        console.log("[Supabase Assets Success] Fetched latest CV from Supabase site_assets:", cvVal.trim());
-        setCvUrl(cvVal.trim());
+      if (resolvedCv && resolvedCv.trim() !== "") {
+        console.log("[Supabase Assets Success] Fetched latest CV from Supabase site_assets:", resolvedCv.trim());
+        setCvUrl(resolvedCv.trim());
       }
-      if (homeVal && homeVal.trim() !== "") {
-        setHomeImageUrl(homeVal.trim());
+      if (resolvedHome && resolvedHome.trim() !== "") {
+        setHomeImageUrl(resolvedHome.trim());
       }
-      if (aboutVal && aboutVal.trim() !== "") {
-        setAboutImageUrl(aboutVal.trim());
-        setAboutImage(aboutVal.trim()); // Keep aboutImage in sync
+      if (resolvedAbout && resolvedAbout.trim() !== "") {
+        setAboutImageUrl(resolvedAbout.trim());
+        setAboutImage(resolvedAbout.trim()); // Keep aboutImage in sync
       }
     } else {
       console.error(
@@ -4463,6 +4644,76 @@ export default function App() {
     }
   };
 
+  // Function to fetch social links dynamically from Supabase 'social links' table
+  const fetchSupabaseSocialLinks = async () => {
+    console.log("[Supabase Social Links] Initiating fetch for 'social links' table...");
+    let fetchedRows: any[] = [];
+
+    // Attempt 1: JS Client SDK
+    try {
+      const { data, error } = await supabaseClient
+        .from('social links')
+        .select('*')
+        .order('id', { ascending: true });
+
+      if (error) {
+        console.error("[Supabase Social Links Error] SDK fetch encountered error:", error);
+      } else if (data && data.length > 0) {
+        console.log(`[Supabase Social Links Success] ${data.length} links loaded via SDK`);
+        fetchedRows = data;
+      }
+    } catch (err: any) {
+      console.error("[Supabase Social Links Error] SDK fetch threw exception:", err);
+    }
+
+    // Attempt 2: REST fallback
+    if (fetchedRows.length === 0) {
+      try {
+        const restUrl = `${SUPABASE_URL}/rest/v1/${encodeURIComponent('social links')}?select=*&order=id.asc`;
+        console.log(`[Supabase Social Links] Attempt 2: REST API fallback: ${restUrl}`);
+        const response = await fetch(restUrl, {
+          method: 'GET',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (response.ok) {
+          const text = await response.text();
+          if (text) {
+            const parsed = JSON.parse(text);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              console.log(`[Supabase Social Links Success] ${parsed.length} links loaded via REST fallback`);
+              fetchedRows = parsed;
+            }
+          }
+        }
+      } catch (err: any) {
+        console.warn("[Supabase Social Links Error] REST fallback fetch exception:", err);
+      }
+    }
+
+    if (fetchedRows && fetchedRows.length > 0) {
+      const parsedLinks: SocialLinkRecord[] = fetchedRows
+        .map((r: any, idx: number) => {
+          const rawName = getCaseInsensitiveProp(r, 'name') || getCaseInsensitiveProp(r, 'platform') || '';
+          const rawLink = getCaseInsensitiveProp(r, 'link') || getCaseInsensitiveProp(r, 'url') || '';
+          const idVal = r.id ?? `social-${idx}`;
+          return {
+            id: idVal,
+            name: String(rawName).trim(),
+            link: String(rawLink).trim(),
+            created_at: r.created_at
+          };
+        })
+        .filter(item => item.name && item.link);
+
+      console.log("[Supabase Social Links Success] Mapped social links:", parsedLinks);
+      setSocialLinks(parsedLinks);
+    }
+  };
+
   // Verifier to log logo_url, home_image_url, and about_image_url values and check if applied to the image elements
   useEffect(() => {
     console.log("[Image State Update Logs]");
@@ -4569,7 +4820,8 @@ export default function App() {
             fetchSupabaseSettings(),
             fetchSupabaseAssets(),
             fetchSupabaseReviews(),
-            fetchSupabaseServices()
+            fetchSupabaseServices(),
+            fetchSupabaseSocialLinks()
           ]);
 
           // Load Reviews
@@ -4683,6 +4935,16 @@ export default function App() {
         console.log(`[Supabase Realtime] Services subscription status: ${status}`);
       });
 
+    const socialLinksChannel = supabaseClient
+      .channel('supabase-social-links-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'social links' }, (payload) => {
+        console.log('[Supabase Realtime] Change detected in public.social links table:', payload);
+        fetchSupabaseSocialLinks();
+      })
+      .subscribe((status) => {
+        console.log(`[Supabase Realtime] Social links subscription status: ${status}`);
+      });
+
     // Poll every 6 seconds as a robust fallback in case WebSockets/Replication are disabled
     const intervalId = setInterval(() => {
       fetchSupabasePortfolio();
@@ -4690,6 +4952,7 @@ export default function App() {
       fetchSupabaseAssets();
       fetchSupabaseReviews();
       fetchSupabaseServices();
+      fetchSupabaseSocialLinks();
     }, 6000);
 
     return () => {
@@ -4699,6 +4962,7 @@ export default function App() {
       supabaseClient.removeChannel(assetsChannel);
       supabaseClient.removeChannel(reviewsChannel);
       supabaseClient.removeChannel(servicesChannel);
+      supabaseClient.removeChannel(socialLinksChannel);
       clearInterval(intervalId);
     };
   }, []);
@@ -4977,6 +5241,7 @@ export default function App() {
                 aboutImage={homeImageUrl}
                 setPage={setPage}
                 cvUrl={cvUrl}
+                socialLinks={socialLinks}
                 onAboutMe={() => {
                   setPage('about');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -5017,6 +5282,7 @@ export default function App() {
                 isSending={isEmailSending} 
                 selectedPackage={selectedPackage}
                 setSelectedPackage={setSelectedPackage}
+                socialLinks={socialLinks}
               />
             </>
           )}
@@ -5228,6 +5494,7 @@ export default function App() {
                 isSending={isEmailSending} 
                 selectedPackage={selectedPackage}
                 setSelectedPackage={setSelectedPackage}
+                socialLinks={socialLinks}
               />
             </div>
           )}
@@ -5351,32 +5618,26 @@ export default function App() {
         </div>
 
         <div className="flex flex-col items-center gap-12">
-          <div className="flex flex-wrap justify-center gap-4 md:gap-5 max-w-full">
-            {[
-              { Icon: FaFacebook, url: 'https://www.facebook.com/profile.php?id=61592538396121', color: '#1877F2' },
-              { Icon: FaYoutube, url: 'https://www.youtube.com/@Abu_Hanif_Sarker', color: '#FF0000' },
-              { Icon: FaInstagram, url: 'https://www.instagram.com/editor_abu.hanif/', color: '#E4405F' },
-              { Icon: FaPinterest, url: 'https://www.pinterest.com/mdabuhanifsarker', color: '#BD081C' },
-              { Icon: FaLinkedin, url: 'https://www.linkedin.com/in/mdabuhanifsarker/', color: '#0A66C2' },
-              { Icon: FaDribbble, url: 'https://dribbble.com/abu-hanif-sarker', color: '#EA4C89' },
-              { Icon: FaBehance, url: 'https://www.behance.net/mdabuhanifsarker', color: '#0057FF' },
-              { Icon: FaGithub, url: 'https://github.com/mdabuhanifsarker', color: '#FFFFFF' },
-              { Icon: FaTelegramPlane, url: 'https://t.me/mdabuhanifsarker', color: '#26A5E4' },
-            ].map((social, i) => (
-              <motion.a
-                key={i}
-                href={social.url}
-                target="_blank"
-                rel="noreferrer"
-                whileHover={{ y: -5, scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-11 h-11 md:w-14 md:h-14 glass-card flex items-center justify-center rounded-full text-slate-400 hover:border-primary/40 transition-all border-white/5 bg-white/[0.03]"
-                style={{ color: social.color }}
-              >
-                <social.Icon size={20} />
-              </motion.a>
-            ))}
-          </div>
+          {footerSocialLinks.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-4 md:gap-5 max-w-full">
+              {footerSocialLinks.map((social) => (
+                <motion.a
+                  key={social.id}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ y: -5, scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-11 h-11 md:w-14 md:h-14 glass-card flex items-center justify-center rounded-full text-slate-400 hover:border-primary/40 transition-all border-white/5 bg-white/[0.03]"
+                  style={{ color: social.color }}
+                  aria-label={social.label}
+                  title={social.label}
+                >
+                  <social.Icon size={20} />
+                </motion.a>
+              ))}
+            </div>
+          )}
           <div className="flex flex-col items-center gap-4 border-t border-white/5 pt-12 w-full">
              <p className="text-[#cbcbcb] font-sans text-[10px] md:text-xs uppercase tracking-[0.4em]">
                © 2024 HANIF. ALL PRECISION RESERVED.
